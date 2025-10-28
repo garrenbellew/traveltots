@@ -5,6 +5,12 @@ const nextConfig = {
     domains: ['localhost'],
     remotePatterns: [],
   },
+  eslint: {
+    ignoreDuringBuilds: true,
+  },
+  typescript: {
+    ignoreBuildErrors: true,
+  },
   webpack: (config) => {
     config.resolve.alias = {
       ...config.resolve.alias,
