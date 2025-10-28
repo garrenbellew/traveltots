@@ -114,9 +114,11 @@ export default function AdminProductsPage() {
     setShowProductForm(true)
   }
 
-  function handleProductFormSuccess() {
+  async function handleProductFormSuccess() {
+    // Small delay to ensure the API has finished processing
+    await new Promise(resolve => setTimeout(resolve, 100))
+    // Refresh the data
     fetchData()
-    setShowProductForm(false)
     setSelectedProduct(undefined)
   }
 
@@ -151,9 +153,11 @@ export default function AdminProductsPage() {
     setShowCategoryForm(true)
   }
 
-  function handleCategoryFormSuccess() {
+  async function handleCategoryFormSuccess() {
+    // Small delay to ensure the API has finished processing
+    await new Promise(resolve => setTimeout(resolve, 100))
+    // Refresh the categories list
     fetchData()
-    setShowCategoryForm(false)
     setSelectedCategory(undefined)
   }
 
