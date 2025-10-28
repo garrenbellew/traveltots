@@ -2,6 +2,8 @@ import { prisma } from '@/lib/prisma'
 import ProductCard from '@/components/ProductCard'
 import CategoryFilter from '@/components/CategoryFilter'
 
+export const dynamic = 'force-dynamic'
+
 async function getCategories() {
   return await prisma.category.findMany({
     orderBy: { name: 'asc' },

@@ -1,9 +1,9 @@
 'use client'
 
-import { useSearchParams } from 'next/navigation'
+import { useSearchParams, Suspense } from 'next/navigation'
 import { CheckCircle } from 'lucide-react'
 
-export default function OrderConfirmationPage() {
+function OrderConfirmationForm() {
   const searchParams = useSearchParams()
   const orderId = searchParams.get('orderId')
 
@@ -56,6 +56,14 @@ export default function OrderConfirmationPage() {
         </div>
       </div>
     </div>
+  )
+}
+
+export default function OrderConfirmationPage() {
+  return (
+    <Suspense fallback={<div className="min-h-screen flex items-center justify-center"><div className="animate-spin h-8 w-8 border-4 border-primary border-t-transparent rounded-full"></div></div>}>
+      <OrderConfirmationForm />
+    </Suspense>
   )
 }
 
