@@ -7,9 +7,15 @@ services:
     startCommand: npx prisma db push --skip-generate --accept-data-loss && node scripts/init-db.js && npm start
     envVars:
       - key: DATABASE_URL
-        value: file:./prisma/production.db
+        fromDatabase:
+          name: travel-tots-db
+          property: connectionString
       - key: NODE_ENV
         value: production
       - key: PRISMA_GENERATE_DATAPROXY
         value: "false"
+  
+  - type: pgsql
+    name: travel-tots-db
+    plan: free
 
