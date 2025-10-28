@@ -2,13 +2,20 @@ services:
   - type: web
     name: travel-tots
     env: node
+    plan: free
     buildCommand: npm install && npm run build
-    startCommand: npm start
+    startCommand: npx prisma db push --accept-data-loss && npm start
     envVars:
       - key: DATABASE_URL
-        value: file:./prisma/dev.db
+        fromDatabase:
+          name: travel-tots-db
+          property: connectionString
       - key: NODE_ENV
         value: production
       - key: PRISMA_GENERATE_DATAPROXY
         value: "false"
+  
+  - type: pgsql
+    name: travel-tots-db
+    plan: free
 
