@@ -1,0 +1,210 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "sqlite"
+  url      = env("DATABASE_URL")
+}
+
+model Admin {
+  id                       String   @id @default(cuid())
+  username                 String   @unique
+  password                 String
+  email                    String   @unique
+  twoFactorEnabled         Boolean  @default(false)
+  twoFactorSecret          String?
+  createdAt                DateTime @default(now())
+  updatedAt                DateTime @updatedAt
+  whatsappNumber           String?
+  whatsappMessageCancelled String?
+  whatsappMessageCompleted String?
+  whatsappMessageConfirmed String?
+  whatsappMessageDelivered String?
+}
+
+model Category {
+  id          String    @id @default(cuid())
+  name        String    @unique
+  slug        String    @unique
+  description String?
+  createdAt   DateTime  @default(now())
+  updatedAt   DateTime  @updatedAt
+  products    Product[]
+}
+
+model Product {
+  id             String          @id @default(cuid())
+  name           String
+  slug           String          @unique
+  description    String
+  price          Float
+  image          String?
+  categoryId     String
+  totalStock     Int             @default(1)
+  isBundle       Boolean         @default(false)
+  isActive       Boolean         @default(true)
+  createdAt      DateTime        @default(now())
+  updatedAt      DateTime        @updatedAt
+  orderItems     OrderItem[]
+  category       Category        @relation(fields: [categoryId], references: [id], onDelete: Cascade)
+  bundleProducts ProductBundle[] @relation("BundleProduct")
+  parentBundles  ProductBundle[] @relation("ParentBundle")
+  stockBlocks    StockBlock[]
+}
+
+model ProductBundle {
+  id                String   @id @default(cuid())
+  bundleProductId   String
+  includedProductId String
+  quantity          Int      @default(1)
+  createdAt         DateTime @default(now())
+  updatedAt         DateTime @updatedAt
+  includedProduct   Product  @relation("BundleProduct", fields: [includedProductId], references: [id], onDelete: Cascade)
+  bundleProduct     Product  @relation("ParentBundle", fields: [bundleProductId], references: [id], onDelete: Cascade)
+
+  @@unique([bundleProductId, includedProductId])
+}
+
+model StockBlock {
+  id        String   @id @default(cuid())
+  productId String
+  orderId   String?
+  startDate DateTime
+  endDate   DateTime
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+  order     Order?   @relation(fields: [orderId], references: [id], onDelete: Cascade)
+  product   Product  @relation(fields: [productId], references: [id], onDelete: Cascade)
+
+  @@index([productId])
+  @@index([startDate])
+  @@index([endDate])
+}
+
+model Customer {
+  id        String         @id @default(cuid())
+  email     String         @unique
+  password  String
+  name      String
+  phone     String
+  isActive  Boolean        @default(true)
+  createdAt DateTime       @default(now())
+  updatedAt DateTime       @updatedAt
+  orders    Order[]
+  messages  OrderMessage[]
+  resetTokens PasswordResetToken[]
+}
+
+model PasswordResetToken {
+  id        String    @id @default(cuid())
+  customerId String
+  token     String    @unique
+  expiresAt DateTime
+  used      Boolean   @default(false)
+  createdAt DateTime  @default(now())
+  customer  Customer  @relation(fields: [customerId], references: [id], onDelete: Cascade)
+
+  @@index([customerId])
+  @@index([token])
+}
+
+model Order {
+  id              String         @id @default(cuid())
+  customerId      String?
+  customerName    String
+  customerEmail   String
+  customerPhone   String
+  customerAddress String
+  flightDetails   String?
+  specialRequests String?
+  rentalStartDate DateTime
+  rentalEndDate   DateTime
+  status          String         @default("PENDING")
+  adminNotes      String?
+  termsAccepted   Boolean        @default(false)
+  totalPrice      Float
+  confirmedAt     DateTime?
+  completedAt     DateTime?
+  cancelledAt     DateTime?
+  createdAt       DateTime       @default(now())
+  updatedAt       DateTime       @updatedAt
+  deliveredAt     DateTime?
+  // Delivery coordination fields
+  deliveryType    String?        // "AIRPORT", "ACCOMMODATION", "DUAL"
+  // Airport delivery details
+  outboundAirport String?
+  arrivalTime     String?
+  onwardJourney   String?        // CAR_HIRE, TAXI, PRIVATE_TRANSFER, FRIEND_FAMILY
+  returnAirport   String?
+  returnArrivalTime String?
+  returnFlightNumber String?
+  returnDepartureTime String?
+  // Accommodation delivery details
+  accommodationArrival String?
+  accommodationDeparture String?
+  customer        Customer?      @relation(fields: [customerId], references: [id])
+  items           OrderItem[]
+  messages        OrderMessage[]
+  stockBlocks     StockBlock[]
+}
+
+model OrderMessage {
+  id         String    @id @default(cuid())
+  orderId    String
+  customerId String?
+  sender     String    @default("CUSTOMER")
+  message    String
+  isRead     Boolean   @default(false)
+  createdAt  DateTime  @default(now())
+  updatedAt  DateTime  @updatedAt
+  customer   Customer? @relation(fields: [customerId], references: [id])
+  order      Order     @relation(fields: [orderId], references: [id], onDelete: Cascade)
+
+  @@index([orderId])
+}
+
+model OrderItem {
+  id        String   @id @default(cuid())
+  orderId   String
+  productId String
+  quantity  Int      @default(1)
+  price     Float
+  createdAt DateTime @default(now())
+  product   Product  @relation(fields: [productId], references: [id])
+  order     Order    @relation(fields: [orderId], references: [id], onDelete: Cascade)
+}
+
+model Page {
+  id        String   @id @default(cuid())
+  title     String
+  slug      String   @unique
+  content   String
+  isActive  Boolean  @default(true)
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+  image     String?
+}
+
+model PricingConfig {
+  id                       String   @id @default(cuid())
+  weeklyPricePercentIncrease Float    @default(10)    // Percentage increase per day over 1 week (for days 8-14)
+  minOrderValue            Float    @default(0)      // Minimum order value for standard deliveries
+  airportMinOrder          Float    @default(0)      // Minimum order value for airport deliveries
+  createdAt                DateTime @default(now())
+  updatedAt                DateTime @updatedAt
+}
+
+model Testimonial {
+  id        String   @id @default(cuid())
+  name      String
+  location  String?  // Where they're from (e.g., "Manchester, UK")
+  rating    Int      @default(5)  // 1-5 stars
+  content   String
+  image     String?  // Optional photo of customer or their family
+  isActive  Boolean  @default(true)
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@index([isActive])
+}
