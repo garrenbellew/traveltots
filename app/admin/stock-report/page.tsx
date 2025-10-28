@@ -175,11 +175,12 @@ export default function StockReportPage() {
                 <tbody className="bg-white divide-y divide-gray-200">
                   {oversoldProducts.map((product) => {
                     const orders = product.oversoldOrders || []
-                    const earliestStartDate = orders.length > 0 
-                      ? new Date(Math.min(...orders.map(o => new Date(o.rentalStartDate).getTime())))
+                    const validOrders = orders.filter(o => o.rentalStartDate && o.rentalEndDate)
+                    const earliestStartDate = validOrders.length > 0 
+                      ? new Date(Math.min(...validOrders.map(o => new Date(o.rentalStartDate).getTime())))
                       : null
-                    const latestEndDate = orders.length > 0
-                      ? new Date(Math.max(...orders.map(o => new Date(o.rentalEndDate).getTime())))
+                    const latestEndDate = validOrders.length > 0
+                      ? new Date(Math.max(...validOrders.map(o => new Date(o.rentalEndDate).getTime())))
                       : null
                     
                     return (
@@ -228,9 +229,11 @@ export default function StockReportPage() {
                                       <div className="text-gray-700">
                                         <span className="font-medium">{order.customerName}</span> ({order.customerEmail})
                                       </div>
-                                      <div className="text-gray-600">
-                                        📆 {new Date(order.rentalStartDate).toLocaleDateString()} - {new Date(order.rentalEndDate).toLocaleDateString()}
-                                      </div>
+                                      {order.rentalStartDate && order.rentalEndDate && (
+                                        <div className="text-gray-600">
+                                          📆 {new Date(order.rentalStartDate).toLocaleDateString()} - {new Date(order.rentalEndDate).toLocaleDateString()}
+                                        </div>
+                                      )}
                                     </div>
                                   ))}
                                 </div>

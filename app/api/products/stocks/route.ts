@@ -20,7 +20,13 @@ export async function GET() {
             id: true,
             orderNumber: true,
             customerName: true,
-            customerEmail: true
+            customerEmail: true,
+            items: {
+              select: {
+                startDate: true,
+                endDate: true
+              }
+            }
           }
         }
       }
@@ -42,12 +48,18 @@ export async function GET() {
       const contributingOrders = activeBlocks
         .map(block => block.order)
         .filter(Boolean)
-        .map(order => ({
-          orderId: order.id,
-          orderNumber: order.orderNumber,
-          customerName: order.customerName,
-          customerEmail: order.customerEmail
-        }))
+        .map(order => {
+          // Get the dates from the first order item (all items in an order have the same dates)
+          const firstItem = order.items && order.items.length > 0 ? order.items[0] : null
+          return {
+            orderId: order.id,
+            orderNumber: order.orderNumber,
+            customerName: order.customerName,
+            customerEmail: order.customerEmail,
+            rentalStartDate: firstItem?.startDate ? new Date(firstItem.startDate).toISOString() : null,
+            rentalEndDate: firstItem?.endDate ? new Date(firstItem.endDate).toISOString() : null
+          }
+        })
 
       return {
         ...product,
