@@ -25,7 +25,13 @@ services:
       echo "========================================="
       echo "BUILD COMPLETE"
       echo "========================================="
-    startCommand: npx prisma db push --skip-generate --accept-data-loss; node scripts/init-db.js; npm start
+    startCommand: |
+      echo "=== Creating database tables ==="
+      npx prisma db push --skip-generate --accept-data-loss
+      echo "=== Initializing admin user ==="
+      node scripts/init-db.js
+      echo "=== Starting server ==="
+      npm start
     envVars:
       - key: DATABASE_URL
         fromDatabase:
