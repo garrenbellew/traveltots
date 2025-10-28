@@ -12,25 +12,37 @@ export async function GET() {
     })
 
     // Get current active stock blocks (for active orders, not cancelled)
-    const stockBlocks = await prisma.stockBlock.findMany({
-      include: {
-        order: {
-          select: { 
-            status: true,
-            id: true,
-            orderNumber: true,
-            customerName: true,
-            customerEmail: true,
-            items: {
-              select: {
-                startDate: true,
-                endDate: true
+    let stockBlocks = []
+    try {
+      stockBlocks = await prisma.stockBlock.findMany({
+        include: {
+          order: {
+            select: { 
+              status: true,
+              id: true,
+              orderNumber: true,
+              customerName: true,
+              customerEmail: true,
+              items: {
+                select: {
+                  startDate: true,
+                  endDate: true
+                }
               }
             }
           }
         }
-      }
-    })
+      })
+    } catch (error) {
+      console.error('Error fetching stock blocks:', error)
+      // Return products without stock info
+      return NextResponse.json(products.map(p => ({
+        ...p,
+        reserved: 0,
+        available: p.totalStock,
+        oversoldOrders: []
+      })))
+    }
 
     // Calculate available stock for each product
     const now = new Date()

@@ -63,8 +63,20 @@ export default function AdminProductsPage() {
       console.log('Fetched categories:', categoriesData)
       
       // Fetch stock information
-      const stocksRes = await fetch('/api/products/stocks')
-      const stocksData = await stocksRes.json()
+      let stocksData = []
+      try {
+        const stocksRes = await fetch('/api/products/stocks')
+        stocksData = await stocksRes.json()
+        
+        // Check if API returned an error object instead of array
+        if (!Array.isArray(stocksData)) {
+          console.warn('Stocks API returned non-array:', stocksData)
+          stocksData = []
+        }
+      } catch (error) {
+        console.error('Error fetching stocks:', error)
+        stocksData = []
+      }
       
       // Merge stock data with products
       const productsWithStock = productsData.map((product: Product) => {
