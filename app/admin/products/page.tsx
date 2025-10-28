@@ -60,6 +60,8 @@ export default function AdminProductsPage() {
       const productsData = await productsRes.json()
       const categoriesData = await categoriesRes.json()
       
+      console.log('Fetched categories:', categoriesData)
+      
       // Fetch stock information
       const stocksRes = await fetch('/api/products/stocks')
       const stocksData = await stocksRes.json()
@@ -76,6 +78,7 @@ export default function AdminProductsPage() {
       
       setProducts(productsWithStock)
       setAllCategories(categoriesData)
+      console.log('Set categories state:', categoriesData)
     } catch (error) {
       console.error('Error fetching data:', error)
     } finally {
@@ -335,7 +338,9 @@ export default function AdminProductsPage() {
           </div>
         ) : (
           /* Categories Tab */
-          <div className="bg-white rounded-lg shadow overflow-x-auto">
+          <>
+            {/* Debug: {console.log('Rendering categories tab, count:', allCategories.length, 'categories:', allCategories)} */}
+            <div className="bg-white rounded-lg shadow overflow-x-auto">
             <table className="min-w-full divide-y divide-gray-200">
               <thead className="bg-gray-50">
                 <tr>
@@ -390,6 +395,7 @@ export default function AdminProductsPage() {
               </tbody>
             </table>
           </div>
+          </>
         )}
       </div>
 
