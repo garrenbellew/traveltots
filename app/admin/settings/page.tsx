@@ -2,7 +2,7 @@
 
 import { useEffect, useState } from 'react'
 import { useRouter } from 'next/navigation'
-import { Save, MessageCircle, DollarSign } from 'lucide-react'
+import { Save, MessageCircle, DollarSign, Lock } from 'lucide-react'
 import AdminNav from '@/components/AdminNav'
 
 export default function AdminSettingsPage() {
@@ -15,6 +15,13 @@ export default function AdminSettingsPage() {
   const [messageCompleted, setMessageCompleted] = useState('')
   const [messageCancelled, setMessageCancelled] = useState('')
   const [statusMessage, setStatusMessage] = useState('')
+  
+  // Password change state
+  const [currentPassword, setCurrentPassword] = useState('')
+  const [newPassword, setNewPassword] = useState('')
+  const [confirmPassword, setConfirmPassword] = useState('')
+  const [passwordMessage, setPasswordMessage] = useState('')
+  const [changingPassword, setChangingPassword] = useState(false)
   
   // Pricing configuration state
   const [weeklyPricePercentIncrease, setWeeklyPricePercentIncrease] = useState(10)
@@ -101,6 +108,41 @@ export default function AdminSettingsPage() {
     }
   }
 
+  async function handleChangePassword() {
+    setChangingPassword(true)
+    setPasswordMessage('')
+
+    try {
+      const response = await fetch('/api/admin/change-password', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          currentPassword,
+          newPassword,
+          confirmPassword,
+        }),
+      })
+
+      const data = await response.json()
+
+      if (!response.ok) {
+        throw new Error(data.error || 'Failed to change password')
+      }
+
+      setPasswordMessage('Password changed successfully!')
+      setCurrentPassword('')
+      setNewPassword('')
+      setConfirmPassword('')
+      setTimeout(() => setPasswordMessage(''), 3000)
+    } catch (error: any) {
+      setPasswordMessage(error.message || 'Failed to change password')
+    } finally {
+      setChangingPassword(false)
+    }
+  }
+
   if (loading) {
     return (
       <div className="flex items-center justify-center min-h-screen">
@@ -118,6 +160,71 @@ export default function AdminSettingsPage() {
         <div className="mb-8">
           <h1 className="text-3xl font-bold text-gray-900">Settings</h1>
           <p className="text-gray-600 mt-2">Configure WhatsApp messages and communication settings</p>
+        </div>
+
+        {/* Password Change */}
+        <div className="card mb-6">
+          <div className="flex items-center gap-3 mb-6">
+            <Lock className="text-primary-600" size={24} />
+            <h2 className="text-xl font-semibold text-gray-900">Change Password</h2>
+          </div>
+
+          <div className="space-y-4">
+            <div>
+              <label className="block text-sm font-medium text-gray-700 mb-2">
+                Current Password
+              </label>
+              <input
+                type="password"
+                value={currentPassword}
+                onChange={(e) => setCurrentPassword(e.target.value)}
+                className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary-500 focus:border-transparent"
+              />
+            </div>
+
+            <div>
+              <label className="block text-sm font-medium text-gray-700 mb-2">
+                New Password
+              </label>
+              <input
+                type="password"
+                value={newPassword}
+                onChange={(e) => setNewPassword(e.target.value)}
+                className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary-500 focus:border-transparent"
+              />
+            </div>
+
+            <div>
+              <label className="block text-sm font-medium text-gray-700 mb-2">
+                Confirm New Password
+              </label>
+              <input
+                type="password"
+                value={confirmPassword}
+                onChange={(e) => setConfirmPassword(e.target.value)}
+                className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary-500 focus:border-transparent"
+              />
+            </div>
+
+            {passwordMessage && (
+              <div className={`p-4 rounded-lg ${
+                passwordMessage.includes('success') 
+                  ? 'bg-green-50 text-green-700 border border-green-200' 
+                  : 'bg-red-50 text-red-700 border border-red-200'
+              }`}>
+                {passwordMessage}
+              </div>
+            )}
+
+            <button
+              onClick={handleChangePassword}
+              disabled={changingPassword}
+              className="btn btn-secondary flex items-center gap-2 w-full sm:w-auto"
+            >
+              <Lock size={18} />
+              {changingPassword ? 'Changing...' : 'Change Password'}
+            </button>
+          </div>
         </div>
 
         {/* WhatsApp Number */}
