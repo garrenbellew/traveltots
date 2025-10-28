@@ -18,8 +18,7 @@ export async function GET() {
           select: { 
             status: true,
             id: true,
-            rentalStartDate: true,
-            rentalEndDate: true,
+            orderNumber: true,
             customerName: true,
             customerEmail: true
           }
@@ -45,8 +44,7 @@ export async function GET() {
         .filter(Boolean)
         .map(order => ({
           orderId: order.id,
-          rentalStartDate: order.rentalStartDate,
-          rentalEndDate: order.rentalEndDate,
+          orderNumber: order.orderNumber,
           customerName: order.customerName,
           customerEmail: order.customerEmail
         }))

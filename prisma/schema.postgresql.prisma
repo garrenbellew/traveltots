@@ -181,7 +181,7 @@ model OrderMessage {
 model PricingConfig {
   id                        String  @id @default(cuid())
   minOrderValue             Float
-  minOrderAirport           Float
+  airportMinOrder           Float
   weeklyPricePercentIncrease Float
   createdAt                 DateTime @default(now())
   updatedAt                 DateTime @updatedAt
