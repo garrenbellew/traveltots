@@ -6,21 +6,25 @@ services:
     # Disable build cache to ensure fresh builds
     buildCacheEnabled: false
     buildCommand: |
+      echo "========================================="
+      echo "BUILD START - Travel Tots"
+      echo "========================================="
       echo "DATABASE_URL is set: $([ -n "$DATABASE_URL" ] && echo 'YES' || echo 'NO')"
-      echo "DATABASE_URL starts with: $(echo $DATABASE_URL | cut -c1-20)"
+      echo "DATABASE_URL starts with: $(echo $DATABASE_URL | cut -c1-30)"
       npm install
-      echo "=== Pre-copy verification ==="
-      cat prisma/schema.prisma | head -10
-      echo "=== Copying PostgreSQL schema ==="
+      echo "=== STEP 1: Check original schema ==="
+      head -8 prisma/schema.prisma | grep -E "provider|datasource"
+      echo "=== STEP 2: Copy PostgreSQL schema ==="
       cp prisma/schema.postgresql.prisma prisma/schema.prisma
-      echo "=== Post-copy verification ==="
-      cat prisma/schema.prisma | grep "provider"
-      echo "=== Generating Prisma client ==="
+      echo "=== STEP 3: Verify schema was copied ==="
+      head -8 prisma/schema.prisma | grep -E "provider|datasource"
+      echo "=== STEP 4: Generate Prisma client ==="
       npx prisma generate
-      echo "=== Verifying generated client uses PostgreSQL ==="
-      find node_modules/.prisma/client -name "schema.prisma" -exec grep -H "provider" {} \; || echo "No schema found in .prisma/client"
-      echo "=== Build ==="
+      echo "=== STEP 5: Build app ==="
       npm run build
+      echo "========================================="
+      echo "BUILD COMPLETE"
+      echo "========================================="
     startCommand: npx prisma db push --skip-generate --accept-data-loss; node scripts/init-db.js; npm start
     envVars:
       - key: DATABASE_URL
