@@ -3,13 +3,16 @@ services:
     name: travel-tots
     env: node
     plan: free
+    # Disable build cache to ensure fresh builds
+    buildCacheEnabled: false
     buildCommand: |
       npm install
-      rm -rf node_modules/.prisma 2>/dev/null || true
-      rm -rf node_modules/@prisma/client 2>/dev/null || true  
-      rm -rf .next 2>/dev/null || true
+      echo "=== Pre-copy verification ==="
+      cat prisma/schema.prisma | head -10
+      echo "=== Copying PostgreSQL schema ==="
       cp prisma/schema.postgresql.prisma prisma/schema.prisma
-      cat prisma/schema.prisma | grep -q "provider = \"postgresql\"" && echo "✅ Using PostgreSQL schema" || echo "❌ Still using SQLite schema"
+      echo "=== Post-copy verification ==="
+      cat prisma/schema.prisma | grep "provider"
       npx prisma generate
       npm run build
     startCommand: npx prisma db push --skip-generate --accept-data-loss; node scripts/init-db.js; npm start
