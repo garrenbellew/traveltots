@@ -22,6 +22,17 @@ export async function PUT(
     return NextResponse.json(category)
   } catch (error: any) {
     console.error('Error updating category:', error)
+    
+    // Handle unique constraint violations
+    if (error.code === 'P2002') {
+      const field = error.meta?.target?.[0] || 'field'
+      const value = error.meta?.targetValue || ''
+      return NextResponse.json(
+        { error: `A category with this ${field} "${value}" already exists. Please use a different name.` },
+        { status: 400 }
+      )
+    }
+    
     return NextResponse.json(
       { error: error.message || 'Failed to update category' },
       { status: 500 }

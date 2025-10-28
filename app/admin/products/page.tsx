@@ -315,6 +315,20 @@ export default function AdminProductsPage() {
             </table>
           </div>
           )
+        ) : allCategories.length === 0 ? (
+          <div className="card text-center py-12">
+            <Tag size={48} className="mx-auto text-gray-400 mb-4" />
+            <p className="text-gray-600 text-lg mb-4">No categories found</p>
+            <button 
+              onClick={() => {
+                setSelectedCategory(undefined)
+                setShowCategoryForm(true)
+              }} 
+              className="btn btn-primary"
+            >
+              Add Your First Category
+            </button>
+          </div>
         ) : (
           /* Categories Tab */
           <div className="bg-white rounded-lg shadow overflow-x-auto">
