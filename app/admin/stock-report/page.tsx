@@ -115,7 +115,7 @@ export default function StockReportPage() {
               <h3 className="font-semibold text-green-900">Healthy Stock</h3>
             </div>
             <p className="text-3xl font-bold text-green-900">{healthyStockProducts.length}</p>
-            <p className="text-sm text-green-700 mt-1">Items with >{threshold} units available</p>
+            <p className="text-sm text-green-700 mt-1">Items with &gt;{threshold} units available</p>
           </div>
         </div>
 
