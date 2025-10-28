@@ -3,7 +3,7 @@ services:
     name: travel-tots
     env: node
     plan: free
-    buildCommand: npm install && rm -rf node_modules/.prisma && cp prisma/schema.postgresql.prisma prisma/schema.prisma && echo "Copied PostgreSQL schema" && npx prisma generate && npm run build
+    buildCommand: npm install && rm -rf node_modules/.prisma node_modules/@prisma/client .next && cp prisma/schema.postgresql.prisma prisma/schema.prisma && echo "Copied PostgreSQL schema" && npx prisma generate && npm run build
     startCommand: npx prisma db push --skip-generate --accept-data-loss; node scripts/init-db.js; npm start
     envVars:
       - key: DATABASE_URL
