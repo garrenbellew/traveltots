@@ -6,7 +6,10 @@ const prisma = new PrismaClient();
 async function main() {
   try {
     console.log('🔧 Initializing database...');
-    console.log('DATABASE_URL:', process.env.DATABASE_URL ? 'Set (hidden)' : 'Not set');
+    console.log('DATABASE_URL set:', process.env.DATABASE_URL ? 'YES' : 'NO');
+    if (process.env.DATABASE_URL) {
+      console.log('DATABASE_URL starts with:', process.env.DATABASE_URL.substring(0, 20));
+    }
     
     // Check if admin exists
     const existingAdmin = await prisma.admin.findFirst({
