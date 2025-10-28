@@ -1,0 +1,213 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+model Admin {
+  id                       String   @id @default(cuid())
+  username                 String   @unique
+  password                 String
+  email                    String   @unique
+  twoFactorEnabled         Boolean  @default(false)
+  twoFactorSecret          String?
+  createdAt                DateTime @default(now())
+  updatedAt                DateTime @updatedAt
+  whatsappNumber           String?
+  whatsappMessageCancelled String?
+  whatsappMessageCompleted String?
+  whatsappMessageConfirmed String?
+  whatsappMessageDelivered String?
+
+  @@map("Admin")
+}
+
+model Category {
+  id          String    @id @default(cuid())
+  name        String    @unique
+  description String?
+  createdAt   DateTime  @default(now())
+  updatedAt   DateTime  @updatedAt
+  products    Product[]
+  pages       Page[]
+
+  @@map("Category")
+}
+
+model Product {
+  id                String       @id @default(cuid())
+  name              String
+  slug              String       @unique
+  description       String
+  price             Float
+  image             String?
+  categoryId        String
+  category          Category      @relation(fields: [categoryId], references: [id])
+  totalStock        Int          @default(0)
+  createdAt         DateTime     @default(now())
+  updatedAt         DateTime     @updatedAt
+  isActive          Boolean      @default(true)
+  isBundle          Boolean      @default(false)
+  stockBlocks       StockBlock[]
+  orderItems        OrderItem[]
+  bundles           ProductBundle[] @relation("BundleItems")
+
+  @@map("Product")
+}
+
+model ProductBundle {
+  id        String   @id @default(cuid())
+  productId String
+  bundleId  String
+  product   Product  @relation("BundleItems", fields: [productId], references: [id])
+  quantity  Int
+
+  @@map("ProductBundle")
+}
+
+model StockBlock {
+  id              String   @id @default(cuid())
+  productId       String
+  quantity        Int
+  startDate       DateTime
+  endDate         DateTime
+  orderId         String?
+  product         Product  @relation(fields: [productId], references: [id])
+
+  @@map("StockBlock")
+}
+
+model Order {
+  id                     String        @id @default(cuid())
+  orderNumber             String        @unique
+  customerName            String
+  customerEmail           String
+  customerPhone           String
+  status                  String        @default("PENDING")
+  createdAt               DateTime      @default(now())
+  updatedAt               DateTime      @updatedAt
+  confirmedAt             DateTime?
+  deliveredAt             DateTime?
+  items                   OrderItem[]
+  stockBlocks             StockBlock[]
+  customerId              String?
+  customer                Customer?     @relation(fields: [customerId], references: [id])
+  messages                OrderMessage[]
+  
+  // Delivery coordination fields
+  deliveryType            String?
+  deliveryAddress         String?
+  arrivalDate             String?
+  arrivalTime             String?
+  departureDate           String?
+  departureTime           String?
+  
+  // Airport-specific fields
+  flightNumberInbound     String?
+  inboundAirport          String?
+  inboundArrivalTime      String?
+  onwardJourney           String?
+  
+  // Return journey
+  flightNumberOutbound    String?
+  outboundAirport          String?
+  outboundDepartureTime    String?
+  arrivalTimeBeforeFlight  String?
+
+  @@map("Order")
+}
+
+model OrderItem {
+  id            String  @id @default(cuid())
+  orderId       String
+  productId     String
+  product       Product @relation(fields: [productId], references: [id])
+  quantity      Int
+  rentalStart   DateTime
+  rentalEnd     DateTime
+  order         Order   @relation(fields: [orderId], references: [id], onDelete: Cascade)
+  name          String
+  price         Float
+  slug          String?
+
+  @@map("OrderItem")
+}
+
+model Page {
+  id          String    @id @default(cuid())
+  title       String
+  slug        String    @unique
+  content     String
+  isActive    Boolean   @default(true)
+  image       String?
+  createdAt   DateTime  @default(now())
+  updatedAt   DateTime  @updatedAt
+  categoryId  String?
+  category    Category? @relation(fields: [categoryId], references: [id])
+
+  @@map("Page")
+}
+
+model Customer {
+  id        String        @id @default(cuid())
+  name      String
+  email     String        @unique
+  phone     String
+  password  String
+  createdAt DateTime      @default(now())
+  updatedAt DateTime      @updatedAt
+  orders    Order[]
+  isActive  Boolean       @default(true)
+
+  @@map("Customer")
+}
+
+model OrderMessage {
+  id          String   @id @default(cuid())
+  orderId     String
+  order       Order    @relation(fields: [orderId], references: [id])
+  message     String
+  isFromAdmin Boolean  @default(false)
+  createdAt   DateTime @default(now())
+
+  @@map("OrderMessage")
+}
+
+model PricingConfig {
+  id                        String  @id @default(cuid())
+  minOrderValue             Float
+  minOrderAirport           Float
+  weeklyPricePercentIncrease Float
+  createdAt                 DateTime @default(now())
+  updatedAt                 DateTime @updatedAt
+
+  @@map("PricingConfig")
+}
+
+model PasswordResetToken {
+  id        String   @id @default(cuid())
+  customerId String
+  token     String   @unique
+  expiresAt DateTime
+  createdAt DateTime @default(now())
+
+  @@map("PasswordResetToken")
+}
+
+model Testimonial {
+  id        String   @id @default(cuid())
+  name      String
+  location  String
+  rating    Int
+  content   String
+  image     String?
+  isActive  Boolean  @default(true)
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@map("Testimonial")
+}
+
