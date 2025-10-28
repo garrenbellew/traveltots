@@ -5,6 +5,9 @@ const prisma = new PrismaClient();
 
 async function main() {
   try {
+    console.log('🔧 Initializing database...');
+    console.log('DATABASE_URL:', process.env.DATABASE_URL ? 'Set (hidden)' : 'Not set');
+    
     // Check if admin exists
     const existingAdmin = await prisma.admin.findFirst({
       where: { username: 'admin' }
@@ -37,8 +40,10 @@ async function main() {
       console.log('✅ Admin password reset to: admin');
       console.log('   ⚠️  Please change the password after login!');
     }
+    console.log('✅ Database initialization complete');
   } catch (error) {
-    console.error('Error initializing database:', error);
+    console.error('❌ Error initializing database:', error);
+    console.error('Error details:', error.message);
     process.exit(1);
   }
 }
