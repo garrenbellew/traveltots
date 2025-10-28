@@ -27,6 +27,15 @@ async function main() {
       console.log('   Username: admin');
       console.log('   Password: admin');
       console.log('   ⚠️  Please change the password after first login!');
+    } else {
+      // Reset password to 'admin' if user already exists
+      const hashedPassword = await bcrypt.hash('admin', 10);
+      await prisma.admin.update({
+        where: { username: 'admin' },
+        data: { password: hashedPassword }
+      });
+      console.log('✅ Admin password reset to: admin');
+      console.log('   ⚠️  Please change the password after login!');
     }
   } catch (error) {
     console.error('Error initializing database:', error);
