@@ -44,6 +44,7 @@ export default function AdminBundlesPage() {
   const router = useRouter()
   const [bundles, setBundles] = useState<Bundle[]>([])
   const [allProducts, setAllProducts] = useState<Product[]>([])
+  const [categories, setCategories] = useState<Array<{ id: string; name: string }>>([])
   const [loading, setLoading] = useState(true)
   const [showBundleForm, setShowBundleForm] = useState(false)
   const [selectedBundle, setSelectedBundle] = useState<Bundle | undefined>()
@@ -62,19 +63,28 @@ export default function AdminBundlesPage() {
 
   async function fetchData() {
     try {
-      const [bundlesRes, productsRes] = await Promise.all([
+      const [bundlesRes, productsRes, categoriesRes] = await Promise.all([
         fetch('/api/bundles'),
         fetch('/api/products?all=true'),
+        fetch('/api/categories'),
       ])
       
       const bundlesData = await bundlesRes.json()
       const productsData = await productsRes.json()
+      const categoriesData = await categoriesRes.json()
       
       // Filter out bundles from products list (products only)
       const nonBundleProducts = productsData.filter((p: Product) => !p.isBundle)
       
       setBundles(bundlesData)
       setAllProducts(nonBundleProducts)
+      // Store categories for the form
+      if (categoriesData && categoriesData.length > 0) {
+        setCategories(categoriesData.map((c: { id: string; name: string }) => ({
+          id: c.id,
+          name: c.name,
+        })))
+      }
     } catch (error) {
       console.error('Error fetching data:', error)
     } finally {
@@ -215,13 +225,6 @@ export default function AdminBundlesPage() {
     )
   }
 
-  // Get categories for bundle form (bundles typically use a "Bundles" category or similar)
-  const categories = Array.from(new Set(allProducts.map(p => p.category.name)))
-    .map(name => {
-      const product = allProducts.find(p => p.category.name === name)
-      return product ? { id: product.category?.id || '', name } : null
-    })
-    .filter((c): c is { id: string; name: string } => c !== null)
 
   return (
     <div className="min-h-screen bg-gray-50">
