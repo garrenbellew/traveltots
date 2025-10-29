@@ -239,11 +239,9 @@ export default function AdminCalendarPage() {
   const [loading, setLoading] = useState(true)
   const [selectedDate, setSelectedDate] = useState(new Date())
   const [selectedOrder, setSelectedOrder] = useState<Order | null>(null)
-  const [deliveryPriority, setDeliveryPriority] = useState<string[]>([])
-  const [collectionPriority, setCollectionPriority] = useState<string[]>([])
+  const [drivingPlan, setDrivingPlan] = useState<Array<{id: string, type: 'delivery' | 'collection'}>>([])
   const [showPrintView, setShowPrintView] = useState(false)
-  const prevDeliveryKeyRef = useRef<string>('')
-  const prevCollectionKeyRef = useRef<string>('')
+  const prevPlanKeyRef = useRef<string>('')
 
   useEffect(() => {
     const session = localStorage.getItem('admin_session')
@@ -395,7 +393,7 @@ export default function AdminCalendarPage() {
   const ordersIdStr = orders.map(o => o.id).sort().join(',') || ''
 
   useEffect(() => {
-    // Recalculate deliveries for this date (access orders and selectedDate from closure)
+    // Recalculate unified driving plan (deliveries + collections) for this date
     const dateCheck = new Date(selectedDate)
     dateCheck.setHours(0, 0, 0, 0)
     
@@ -406,35 +404,23 @@ export default function AdminCalendarPage() {
       return startDate.getTime() === dateCheck.getTime()
     })
 
-    const currentIds = currentDeliveries.map(o => o.id).sort().join(',')
-    const newKey = `${dateKeyStr}-${ordersIdStr}-${currentIds}`
-    
-    if (newKey !== prevDeliveryKeyRef.current) {
-      setDeliveryPriority(currentDeliveries.length > 0 ? currentDeliveries.map(o => o.id) : [])
-      prevDeliveryKeyRef.current = newKey
-    }
-    // Only depend on string values, not arrays or objects
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [dateKeyStr, ordersIdStr])
-
-  useEffect(() => {
-    // Recalculate collections for this date (access orders and selectedDate from closure)
-    const dateCheck = new Date(selectedDate)
-    dateCheck.setHours(0, 0, 0, 0)
-    
     const currentCollections = orders.filter(order => {
       if (order.status === 'CANCELLED') return false
       const endDate = new Date(order.rentalEndDate)
       endDate.setHours(0, 0, 0, 0)
       return endDate.getTime() === dateCheck.getTime()
     })
-
-    const currentIds = currentCollections.map(o => o.id).sort().join(',')
-    const newKey = `${dateKeyStr}-${ordersIdStr}-${currentIds}`
+       
+    // Combine into unified list: deliveries first, then collections
+    const unifiedPlan = [
+      ...currentDeliveries.map(o => ({ id: o.id, type: 'delivery' as const })),
+      ...currentCollections.map(o => ({ id: o.id, type: 'collection' as const }))
+    ]
+    const unifiedKey = `${dateKeyStr}-${ordersIdStr}-${unifiedPlan.map(item => `${item.id}-${item.type}`).join(',')}`
     
-    if (newKey !== prevCollectionKeyRef.current) {
-      setCollectionPriority(currentCollections.length > 0 ? currentCollections.map(o => o.id) : [])
-      prevCollectionKeyRef.current = newKey
+    if (unifiedKey !== prevPlanKeyRef.current) {
+      setDrivingPlan(unifiedPlan)
+      prevPlanKeyRef.current = unifiedKey
     }
     // Only depend on string values, not arrays or objects
     // eslint-disable-next-line react-hooks/exhaustive-deps
@@ -454,43 +440,26 @@ export default function AdminCalendarPage() {
   const stockWarnings = getStockWarnings(selectedDate)
   const today = new Date()
 
-  // Reorder functions
-  const moveDeliveryUp = (index: number) => {
+  // Reorder functions for unified driving plan
+  const moveItemUp = (index: number) => {
     if (index === 0) return
-    const newPriority = [...deliveryPriority]
-    ;[newPriority[index - 1], newPriority[index]] = [newPriority[index], newPriority[index - 1]]
-    setDeliveryPriority(newPriority)
+    const newPlan = [...drivingPlan]
+    ;[newPlan[index - 1], newPlan[index]] = [newPlan[index], newPlan[index - 1]]
+    setDrivingPlan(newPlan)
   }
 
-  const moveDeliveryDown = (index: number) => {
-    if (index === deliveryPriority.length - 1) return
-    const newPriority = [...deliveryPriority]
-    ;[newPriority[index], newPriority[index + 1]] = [newPriority[index + 1], newPriority[index]]
-    setDeliveryPriority(newPriority)
+  const moveItemDown = (index: number) => {
+    if (index === drivingPlan.length - 1) return
+    const newPlan = [...drivingPlan]
+    ;[newPlan[index], newPlan[index + 1]] = [newPlan[index + 1], newPlan[index]]
+    setDrivingPlan(newPlan)
   }
 
-  const moveCollectionUp = (index: number) => {
-    if (index === 0) return
-    const newPriority = [...collectionPriority]
-    ;[newPriority[index - 1], newPriority[index]] = [newPriority[index], newPriority[index - 1]]
-    setCollectionPriority(newPriority)
-  }
-
-  const moveCollectionDown = (index: number) => {
-    if (index === collectionPriority.length - 1) return
-    const newPriority = [...collectionPriority]
-    ;[newPriority[index], newPriority[index + 1]] = [newPriority[index + 1], newPriority[index]]
-    setCollectionPriority(newPriority)
-  }
-
-  // Get ordered deliveries and collections based on priority
-  const orderedDeliveries = deliveryPriority
-    .map(id => deliveries.find(o => o.id === id))
-    .filter((o): o is Order => o !== undefined)
-
-  const orderedCollections = collectionPriority
-    .map(id => collections.find(o => o.id === id))
-    .filter((o): o is Order => o !== undefined)
+  // Get ordered driving plan with full order details
+  const orderedDrivingPlan = drivingPlan.map(item => {
+    const order = orders.find(o => o.id === item.id)
+    return order ? { order, type: item.type } : null
+  }).filter((item): item is { order: Order, type: 'delivery' | 'collection' } => item !== null)
 
   return (
     <div className="min-h-screen bg-gray-50">
@@ -600,7 +569,7 @@ export default function AdminCalendarPage() {
         )}
 
         {/* Driving Plan */}
-        {(orderedDeliveries.length > 0 || orderedCollections.length > 0) && (
+        {orderedDrivingPlan.length > 0 && (
           <div className="card mb-8">
             <div className="flex items-center justify-between mb-6">
               <h2 className="text-2xl font-bold">🚗 Driving Plan - {formatDateShort(selectedDate)}</h2>
@@ -613,13 +582,98 @@ export default function AdminCalendarPage() {
               </button>
             </div>
 
-            <div className="grid md:grid-cols-2 gap-8">
-              {/* Deliveries Priority List */}
-              {orderedDeliveries.length > 0 && (
-                <div>
-                  <h3 className="font-semibold text-lg mb-4 text-green-700">Deliveries (Priority Order)</h3>
-                  <div className="space-y-2">
-                    {orderedDeliveries.map((order, index) => (
+            <div className="space-y-2">
+              {orderedDrivingPlan.map((item, planIndex) => {
+                const { order, type } = item
+                const isDelivery = type === 'delivery'
+                
+                return (
+                  <div
+                    key={order.id}
+                    className={isDelivery 
+                      ? "bg-green-50 border border-green-200 rounded-lg p-3 flex items-center gap-3"
+                      : "bg-blue-50 border border-blue-200 rounded-lg p-3 flex items-center gap-3"
+                    }
+                  >
+                    <div className="flex flex-col gap-1">
+                      <button
+                        onClick={() => moveItemUp(planIndex)}
+                        disabled={planIndex === 0}
+                        className={isDelivery
+                          ? "p-1 hover:bg-green-100 rounded disabled:opacity-30 disabled:cursor-not-allowed"
+                          : "p-1 hover:bg-blue-100 rounded disabled:opacity-30 disabled:cursor-not-allowed"
+                        }
+                        title="Move up"
+                      >
+                        <ArrowUp size={16} />
+                      </button>
+                      <button
+                        onClick={() => moveItemDown(planIndex)}
+                        disabled={planIndex === orderedDrivingPlan.length - 1}
+                        className={isDelivery
+                          ? "p-1 hover:bg-green-100 rounded disabled:opacity-30 disabled:cursor-not-allowed"
+                          : "p-1 hover:bg-blue-100 rounded disabled:opacity-30 disabled:cursor-not-allowed"
+                        }
+                        title="Move down"
+                      >
+                        <ArrowDown size={16} />
+                      </button>
+                    </div>
+                    <div className="flex-1">
+                      <div className="flex items-center gap-2 mb-1">
+                        <span className={isDelivery
+                          ? "w-8 h-8 bg-green-600 text-white rounded-full flex items-center justify-center text-sm font-bold flex-shrink-0"
+                          : "w-8 h-8 bg-blue-600 text-white rounded-full flex items-center justify-center text-sm font-bold flex-shrink-0"
+                        }>
+                          {planIndex + 1}
+                        </span>
+                        <span className={isDelivery
+                          ? "px-2 py-1 rounded-full text-xs font-bold uppercase bg-green-600 text-white"
+                          : "px-2 py-1 rounded-full text-xs font-bold uppercase bg-blue-600 text-white"
+                        }>
+                          {type}
+                        </span>
+                        <p className={isDelivery ? "font-medium text-green-900" : "font-medium text-blue-900"}>
+                          {order.customerName}
+                        </p>
+                      </div>
+                      <p className={isDelivery ? "text-sm text-green-700" : "text-sm text-blue-700"}>
+                        {order.customerAddress}
+                      </p>
+                      <p className={isDelivery ? "text-xs text-green-600 mt-1" : "text-xs text-blue-600 mt-1"}>
+                        {order.customerPhone}
+                      </p>
+                    </div>
+                    <button
+                      onClick={() => setSelectedOrder(order)}
+                      className={isDelivery 
+                        ? "text-green-600 hover:text-green-800 text-sm"
+                        : "text-blue-600 hover:text-blue-800 text-sm"
+                      }
+                    >
+                      Details
+                    </button>
+                  </div>
+                )
+              })}
+            </div>
+          </div>
+        )}
+
+        {/* Deliveries and Collections */}
+        <div className="grid md:grid-cols-2 gap-8">
+          {/* Deliveries */}
+          <div className="card">
+            <h2 className="text-xl font-semibold mb-4 flex items-center gap-2">
+              <span className="w-3 h-3 bg-green-500 rounded-full"></span>
+              Deliveries ({formatDateShort(selectedDate)})
+            </h2>
+            
+            {deliveries.length === 0 ? (
+              <p className="text-gray-500">No deliveries scheduled for this date</p>
+            ) : (
+              <div className="space-y-3">
+                {deliveries.map((order) => (
                       <div
                         key={order.id}
                         className="bg-green-50 border border-green-200 rounded-lg p-3 flex items-center gap-3"
