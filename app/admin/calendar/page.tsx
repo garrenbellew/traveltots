@@ -825,103 +825,74 @@ export default function AdminCalendarPage() {
                 <p className="text-xl text-gray-700">{formatDateShort(selectedDate)}</p>
               </div>
 
-              {/* Deliveries Section */}
-              {orderedDeliveries.length > 0 && (
+              {/* Unified Driving Plan */}
+              {orderedDrivingPlan.length > 0 && (
                 <div className="mb-8">
-                  <h2 className="text-2xl font-bold mb-4 pb-2 border-b-2 border-green-600 text-green-700">
-                    🚚 DELIVERIES ({orderedDeliveries.length})
+                  <h2 className="text-2xl font-bold mb-4 pb-2 border-b-2 border-gray-800 text-gray-900">
+                    🚗 DRIVING PLAN ({orderedDrivingPlan.length} stops)
                   </h2>
                   <div className="space-y-4">
-                    {orderedDeliveries.map((order, index) => (
-                      <div key={order.id} className="border border-green-300 rounded-lg p-4 break-inside-avoid">
-                        <div className="flex items-center gap-3 mb-3">
-                          <span className="w-10 h-10 bg-green-600 text-white rounded-full flex items-center justify-center text-lg font-bold flex-shrink-0">
-                            {index + 1}
-                          </span>
-                          <div className="flex-1">
-                            <h3 className="text-xl font-bold text-gray-900">{order.customerName}</h3>
-                            <p className="text-sm text-gray-600">Status: <span className="font-semibold">{order.status}</span></p>
+                    {orderedDrivingPlan.map((item, index) => {
+                      const { order, type } = item
+                      const isDelivery = type === 'delivery'
+                      
+                      return (
+                        <div key={order.id} className={isDelivery ? "border border-green-300 rounded-lg p-4 break-inside-avoid" : "border border-blue-300 rounded-lg p-4 break-inside-avoid"}>
+                          <div className="flex items-center gap-3 mb-3">
+                            <span className={isDelivery 
+                              ? "w-10 h-10 bg-green-600 text-white rounded-full flex items-center justify-center text-lg font-bold flex-shrink-0"
+                              : "w-10 h-10 bg-blue-600 text-white rounded-full flex items-center justify-center text-lg font-bold flex-shrink-0"
+                            }>
+                              {index + 1}
+                            </span>
+                            <div className="flex-1">
+                              <div className="flex items-center gap-2">
+                                <span className={isDelivery
+                                  ? "px-2 py-1 rounded-full text-xs font-bold uppercase bg-green-600 text-white"
+                                  : "px-2 py-1 rounded-full text-xs font-bold uppercase bg-blue-600 text-white"
+                                }>
+                                  {type}
+                                </span>
+                                <h3 className="text-xl font-bold text-gray-900">{order.customerName}</h3>
+                              </div>
+                              <p className="text-sm text-gray-600">Status: <span className="font-semibold">{order.status}</span></p>
+                            </div>
                           </div>
-                        </div>
-                        
-                        <div className="grid md:grid-cols-2 gap-4 mt-3">
-                          <div>
-                            <p className="text-sm font-semibold text-gray-700 mb-1">📍 Address:</p>
-                            <p className="text-gray-900">{order.customerAddress}</p>
+                          
+                          <div className="grid md:grid-cols-2 gap-4 mt-3">
+                            <div>
+                              <p className="text-sm font-semibold text-gray-700 mb-1">📍 Address:</p>
+                              <p className="text-gray-900">{order.customerAddress}</p>
+                            </div>
+                            <div>
+                              <p className="text-sm font-semibold text-gray-700 mb-1">📞 Contact:</p>
+                              <p className="text-gray-900">{order.customerPhone}</p>
+                              <p className="text-gray-600 text-sm">{order.customerEmail}</p>
+                            </div>
                           </div>
-                          <div>
-                            <p className="text-sm font-semibold text-gray-700 mb-1">📞 Contact:</p>
-                            <p className="text-gray-900">{order.customerPhone}</p>
-                            <p className="text-gray-600 text-sm">{order.customerEmail}</p>
-                          </div>
-                        </div>
 
-                        <div className="mt-3">
-                          <p className="text-sm font-semibold text-gray-700 mb-2">📦 Items:</p>
-                          <ul className="list-disc list-inside text-gray-900">
-                            {order.items.map((item, idx) => (
-                              <li key={idx}>
-                                {item.product.name} - Quantity: {item.quantity}
-                              </li>
-                            ))}
-                          </ul>
-                        </div>
+                          <div className="mt-3">
+                            <p className="text-sm font-semibold text-gray-700 mb-2">
+                              {isDelivery ? '📦 Items:' : '📦 Items to Collect:'}
+                            </p>
+                            <ul className="list-disc list-inside text-gray-900">
+                              {order.items.map((item, idx) => (
+                                <li key={idx}>
+                                  {item.product.name} - Quantity: {item.quantity}
+                                </li>
+                              ))}
+                            </ul>
+                          </div>
 
-                        {order.specialRequests && (
-                          <div className="mt-3 p-2 bg-yellow-50 border border-yellow-200 rounded">
-                            <p className="text-sm font-semibold text-gray-700 mb-1">📝 Notes:</p>
-                            <p className="text-sm text-gray-900">{order.specialRequests}</p>
-                          </div>
-                        )}
-                      </div>
-                    ))}
-                  </div>
-                </div>
-              )}
-
-              {/* Collections Section */}
-              {orderedCollections.length > 0 && (
-                <div className="mb-8">
-                  <h2 className="text-2xl font-bold mb-4 pb-2 border-b-2 border-blue-600 text-blue-700">
-                    🏠 COLLECTIONS ({orderedCollections.length})
-                  </h2>
-                  <div className="space-y-4">
-                    {orderedCollections.map((order, index) => (
-                      <div key={order.id} className="border border-blue-300 rounded-lg p-4 break-inside-avoid">
-                        <div className="flex items-center gap-3 mb-3">
-                          <span className="w-10 h-10 bg-blue-600 text-white rounded-full flex items-center justify-center text-lg font-bold flex-shrink-0">
-                            {index + 1}
-                          </span>
-                          <div className="flex-1">
-                            <h3 className="text-xl font-bold text-gray-900">{order.customerName}</h3>
-                            <p className="text-sm text-gray-600">Status: <span className="font-semibold">{order.status}</span></p>
-                          </div>
+                          {order.specialRequests && (
+                            <div className="mt-3 p-2 bg-yellow-50 border border-yellow-200 rounded">
+                              <p className="text-sm font-semibold text-gray-700 mb-1">📝 Notes:</p>
+                              <p className="text-sm text-gray-900">{order.specialRequests}</p>
+                            </div>
+                          )}
                         </div>
-                        
-                        <div className="grid md:grid-cols-2 gap-4 mt-3">
-                          <div>
-                            <p className="text-sm font-semibold text-gray-700 mb-1">📍 Address:</p>
-                            <p className="text-gray-900">{order.customerAddress}</p>
-                          </div>
-                          <div>
-                            <p className="text-sm font-semibold text-gray-700 mb-1">📞 Contact:</p>
-                            <p className="text-gray-900">{order.customerPhone}</p>
-                            <p className="text-gray-600 text-sm">{order.customerEmail}</p>
-                          </div>
-                        </div>
-
-                        <div className="mt-3">
-                          <p className="text-sm font-semibold text-gray-700 mb-2">📦 Items to Collect:</p>
-                          <ul className="list-disc list-inside text-gray-900">
-                            {order.items.map((item, idx) => (
-                              <li key={idx}>
-                                {item.product.name} - Quantity: {item.quantity}
-                              </li>
-                            ))}
-                          </ul>
-                        </div>
-                      </div>
-                    ))}
+                      )
+                    })}
                   </div>
                 </div>
               )}
