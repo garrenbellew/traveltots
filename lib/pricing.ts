@@ -9,6 +9,7 @@ export interface CartItem {
   price: number // This is now the WEEKLY price
   quantity: number
   productId?: string // Optional product ID for bundle discount calculation
+  belongsToBundles?: boolean // Whether this product belongs to any bundles
 }
 
 export interface DateRange {
@@ -101,11 +102,11 @@ export function calculateDiscountedPrice(
   const baseWeeklyPrice = items.reduce((sum, item) => sum + (item.price || 0) * item.quantity, 0)
   
   // Calculate bundle discount
-  // Note: Bundle discount is calculated based on whether products belong to bundles
-  // For now, this is simplified - bundle discount will be 0
-  // TODO: Enhance to check product bundle membership via API or passed data
+  // Apply discount to products that belong to bundles
   const bundleDiscountPercent = pricingConfig.bundleDiscountPercent || 0
-  const bundleDiscount = 0 // Will be calculated when we have bundle membership data
+  const bundleItems = items.filter(item => item.belongsToBundles === true)
+  const bundleSubtotal = bundleItems.reduce((sum, item) => sum + (item.price || 0) * item.quantity, 0)
+  const bundleDiscount = bundleSubtotal * (bundleDiscountPercent / 100)
   
   let extraDaysCharge = 0
   let requiresContact = false

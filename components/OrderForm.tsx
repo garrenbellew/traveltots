@@ -164,31 +164,49 @@ export default function OrderForm({ cart, totalPrice }: OrderFormProps) {
   // Fetch pricing config and calculate discount
   useEffect(() => {
     if (cart.length > 0 && cart[0].rentalStartDate && cart[0].rentalEndDate) {
-      fetch('/api/admin/pricing')
-        .then(res => res.json())
-        .then(config => {
-          setPricingConfig(config)
-          
-          const result = calculateDiscountedPrice(
-            cart,
-            {
-              rentalStartDate: cart[0].rentalStartDate!,
-              rentalEndDate: cart[0].rentalEndDate!,
-            },
-            config,
-            deliveryType
-          )
-          
-          setCalculatedTotal(result.subtotal)
-          setDiscountedTotal(result.total)
-          setDeliveryFee(result.deliveryFee)
-          setDiscount(result.discount)
-          setBundleDiscount(result.bundleDiscount || 0)
-          setRequiresContact(result.requiresContact)
-          setContactMessage(result.message || '')
-          setWeeklyPrice(result.weeklyPrice)
-          setExtraDaysCharge(result.extraDaysCharge)
-        })
+      // First, check which products belong to bundles
+      const productIds = cart.map(item => item.productId).filter(Boolean) as string[]
+      
+      Promise.all([
+        fetch('/api/admin/pricing').then(res => res.json()),
+        productIds.length > 0 
+          ? fetch('/api/products/bundles', {
+              method: 'POST',
+              headers: { 'Content-Type': 'application/json' },
+              body: JSON.stringify({ productIds }),
+            }).then(res => res.json()).catch(() => ({}))
+          : Promise.resolve({}),
+      ]).then(([config, bundleInfo]) => {
+        setPricingConfig(config)
+        
+        // Enhance cart items with bundle membership info
+        const enhancedCart = cart.map(item => ({
+          ...item,
+          belongsToBundles: productIds.length > 0 && item.productId 
+            ? Object.keys(bundleInfo).includes(item.productId) 
+            : false,
+        }))
+        
+        const result = calculateDiscountedPrice(
+          enhancedCart,
+          {
+            rentalStartDate: cart[0].rentalStartDate!,
+            rentalEndDate: cart[0].rentalEndDate!,
+          },
+          config,
+          deliveryType
+        )
+        
+        setCalculatedTotal(result.subtotal)
+        setDiscountedTotal(result.total)
+        setDeliveryFee(result.deliveryFee)
+        setDiscount(result.discount)
+        setBundleDiscount(result.bundleDiscount || 0)
+        setRequiresContact(result.requiresContact)
+        setContactMessage(result.message || '')
+        setWeeklyPrice(result.weeklyPrice)
+        setExtraDaysCharge(result.extraDaysCharge)
+      })
         .catch(err => console.error('Error fetching pricing config:', err))
     }
   }, [cart, deliveryType])
