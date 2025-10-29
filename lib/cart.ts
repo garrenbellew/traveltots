@@ -6,6 +6,7 @@ export interface CartItem {
   price: number
   image: string | null
   quantity: number
+  isBundle?: boolean
 }
 
 export function getCart(): CartItem[] {

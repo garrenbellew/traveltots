@@ -10,6 +10,7 @@ interface CartItem {
   productName: string
   quantity: number
   price: number
+  isBundle?: boolean
   rentalStartDate?: string
   rentalEndDate?: string
   days?: number
@@ -50,6 +51,7 @@ export default function OrderForm({ cart, totalPrice }: OrderFormProps) {
   const [discountedTotal, setDiscountedTotal] = useState(totalPrice)
   const [deliveryFee, setDeliveryFee] = useState(0)
   const [discount, setDiscount] = useState(0)
+  const [bundleDiscount, setBundleDiscount] = useState(0)
   const [requiresContact, setRequiresContact] = useState(false)
   const [contactMessage, setContactMessage] = useState('')
   const [weeklyPrice, setWeeklyPrice] = useState(0)
@@ -182,6 +184,7 @@ export default function OrderForm({ cart, totalPrice }: OrderFormProps) {
           setDiscountedTotal(result.total)
           setDeliveryFee(result.deliveryFee)
           setDiscount(result.discount)
+          setBundleDiscount(result.bundleDiscount || 0)
           setRequiresContact(result.requiresContact)
           setContactMessage(result.message || '')
           setWeeklyPrice(result.weeklyPrice)
@@ -429,6 +432,12 @@ export default function OrderForm({ cart, totalPrice }: OrderFormProps) {
               <span>€{extraDaysCharge.toFixed(2)}</span>
             </div>
           )}
+          {bundleDiscount > 0 && !requiresContact && (
+            <div className="flex justify-between text-sm text-green-600 font-semibold">
+              <span>🎁 Bundle Discount ({pricingConfig?.bundleDiscountPercent || 0}%):</span>
+              <span>-€{bundleDiscount.toFixed(2)}</span>
+            </div>
+          )}
           {discount > 0 && !requiresContact && (
             <div className="flex justify-between text-sm text-green-600">
               <span>Discount:</span>
@@ -441,7 +450,7 @@ export default function OrderForm({ cart, totalPrice }: OrderFormProps) {
                 const minOrder = deliveryType === 'AIRPORT' 
                   ? (pricingConfig.airportMinOrder || 0) 
                   : (pricingConfig.minOrderValue || 0)
-                const discountedSubtotal = calculatedTotal - discount
+                const discountedSubtotal = calculatedTotal - bundleDiscount - discount
                 return discountedSubtotal < minOrder && !requiresContact ? (
                   <>
                     <div className="flex justify-between text-sm text-gray-500">

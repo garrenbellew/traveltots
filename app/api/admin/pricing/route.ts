@@ -13,6 +13,7 @@ export async function GET(request: NextRequest) {
           weeklyPricePercentIncrease: 10,
           minOrderValue: 50,
           airportMinOrder: 75,
+          bundleDiscountPercent: 0,
         },
       })
     }
@@ -34,6 +35,7 @@ export async function PUT(request: NextRequest) {
       weeklyPricePercentIncrease,
       minOrderValue,
       airportMinOrder,
+      bundleDiscountPercent,
     } = body
 
     let config = await prisma.pricingConfig.findFirst()
@@ -45,6 +47,7 @@ export async function PUT(request: NextRequest) {
           weeklyPricePercentIncrease: parseFloat(weeklyPricePercentIncrease) || 10,
           minOrderValue: parseFloat(minOrderValue) || 0,
           airportMinOrder: parseFloat(airportMinOrder) || 0,
+          bundleDiscountPercent: parseFloat(bundleDiscountPercent) || 0,
         },
       })
     } else {
@@ -53,6 +56,7 @@ export async function PUT(request: NextRequest) {
           weeklyPricePercentIncrease: parseFloat(weeklyPricePercentIncrease) || 10,
           minOrderValue: parseFloat(minOrderValue) || 0,
           airportMinOrder: parseFloat(airportMinOrder) || 0,
+          bundleDiscountPercent: parseFloat(bundleDiscountPercent) || 0,
         },
       })
     }

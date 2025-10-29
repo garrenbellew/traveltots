@@ -27,6 +27,12 @@ export default function AdminSettingsPage() {
   const [weeklyPricePercentIncrease, setWeeklyPricePercentIncrease] = useState(10)
   const [minOrderValue, setMinOrderValue] = useState(0)
   const [airportMinOrder, setAirportMinOrder] = useState(0)
+  const [bundleDiscountPercent, setBundleDiscountPercent] = useState(0)
+  
+  // Popular categories state
+  const [popularCategories, setPopularCategories] = useState<string>('')
+  const [allCategories, setAllCategories] = useState<Array<{id: string, name: string, slug: string}>>([])
+  const [selectedCategorySlugs, setSelectedCategorySlugs] = useState<string[]>([])
 
   useEffect(() => {
     const session = localStorage.getItem('admin_session')
@@ -39,9 +45,10 @@ export default function AdminSettingsPage() {
 
   async function fetchSettings() {
     try {
-      const [settingsRes, pricingRes] = await Promise.all([
+      const [settingsRes, pricingRes, categoriesRes] = await Promise.all([
         fetch('/api/admin/settings'),
-        fetch('/api/admin/pricing')
+        fetch('/api/admin/pricing'),
+        fetch('/api/categories')
       ])
       
       const settingsData = await settingsRes.json()
@@ -51,10 +58,18 @@ export default function AdminSettingsPage() {
       setMessageCompleted(settingsData.whatsappMessageCompleted || '')
       setMessageCancelled(settingsData.whatsappMessageCancelled || '')
       
+      const popularCats = settingsData.popularCategories || ''
+      setPopularCategories(popularCats)
+      setSelectedCategorySlugs(popularCats ? popularCats.split(',').filter((s: string) => s.trim()) : [])
+      
       const pricingData = await pricingRes.json()
       setWeeklyPricePercentIncrease(pricingData.weeklyPricePercentIncrease || 10)
       setMinOrderValue(pricingData.minOrderValue || 0)
       setAirportMinOrder(pricingData.airportMinOrder || 0)
+      setBundleDiscountPercent(pricingData.bundleDiscountPercent || 0)
+      
+      const categoriesData = await categoriesRes.json()
+      setAllCategories(categoriesData || [])
     } catch (error) {
       console.error('Error fetching settings:', error)
     } finally {
@@ -79,6 +94,7 @@ export default function AdminSettingsPage() {
             whatsappMessageDelivered: messageDelivered,
             whatsappMessageCompleted: messageCompleted,
             whatsappMessageCancelled: messageCancelled,
+            popularCategories: selectedCategorySlugs.join(','),
           }),
         }),
         fetch('/api/admin/pricing', {
@@ -90,6 +106,7 @@ export default function AdminSettingsPage() {
             weeklyPricePercentIncrease,
             minOrderValue,
             airportMinOrder,
+            bundleDiscountPercent,
           }),
         })
       ])
@@ -386,7 +403,74 @@ export default function AdminSettingsPage() {
               />
             </div>
 
+            {/* Bundle Discount */}
+            <div>
+              <label className="block text-sm font-medium text-gray-700 mb-2">
+                Bundle Discount (%)
+              </label>
+              <p className="text-sm text-gray-500 mb-2">
+                Percentage discount applied to all bundle products. This discount will be clearly displayed in orders.
+              </p>
+              <input
+                type="number"
+                step="0.1"
+                min="0"
+                max="100"
+                value={bundleDiscountPercent}
+                onChange={(e) => setBundleDiscountPercent(parseFloat(e.target.value) || 0)}
+                className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary-500 focus:border-transparent"
+              />
+            </div>
+
           </div>
+        </div>
+
+        {/* Popular Categories */}
+        <div className="card mb-6">
+          <div className="flex items-center gap-3 mb-6">
+            <h2 className="text-xl font-semibold text-gray-900">🌟 Popular Categories</h2>
+          </div>
+
+          <p className="text-sm text-gray-600 mb-6">
+            Select up to 3 categories to display on the landing page as "Popular Categories".
+          </p>
+
+          <div className="space-y-3">
+            {allCategories.map(category => {
+              const isSelected = selectedCategorySlugs.includes(category.slug)
+              return (
+                <label key={category.id} className="flex items-center gap-3 p-3 border border-gray-300 rounded-lg cursor-pointer hover:bg-gray-50">
+                  <input
+                    type="checkbox"
+                    checked={isSelected}
+                    onChange={(e) => {
+                      if (e.target.checked) {
+                        if (selectedCategorySlugs.length < 3) {
+                          setSelectedCategorySlugs([...selectedCategorySlugs, category.slug])
+                        }
+                      } else {
+                        setSelectedCategorySlugs(selectedCategorySlugs.filter(s => s !== category.slug))
+                      }
+                    }}
+                    disabled={!isSelected && selectedCategorySlugs.length >= 3}
+                    className="w-5 h-5 text-primary-600 border-gray-300 rounded focus:ring-primary-500"
+                  />
+                  <span className="flex-1 font-medium text-gray-900">{category.name}</span>
+                  {isSelected && (
+                    <span className="text-xs text-primary-600 font-semibold">SELECTED</span>
+                  )}
+                </label>
+              )
+            })}
+            {allCategories.length === 0 && (
+              <p className="text-gray-500 text-sm">No categories available. Please add categories first.</p>
+            )}
+          </div>
+          {selectedCategorySlugs.length > 0 && (
+            <p className="mt-4 text-sm text-gray-600">
+              Selected: {selectedCategorySlugs.length} / 3 categories
+            </p>
+          )}
         </div>
 
         {/* Status Message */}

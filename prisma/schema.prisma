@@ -21,6 +21,7 @@ model Admin {
   whatsappMessageCompleted String?
   whatsappMessageConfirmed String?
   whatsappMessageDelivered String?
+  popularCategories        String?  // Comma-separated category slugs
 }
 
 model Category {
@@ -191,6 +192,7 @@ model PricingConfig {
   weeklyPricePercentIncrease Float    @default(10)    // Percentage increase per day over 1 week (for days 8-14)
   minOrderValue            Float    @default(0)      // Minimum order value for standard deliveries
   airportMinOrder          Float    @default(0)      // Minimum order value for airport deliveries
+  bundleDiscountPercent    Float    @default(0)      // Percentage discount applied to bundles
   createdAt                DateTime @default(now())
   updatedAt                DateTime @updatedAt
 }

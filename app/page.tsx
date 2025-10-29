@@ -1,7 +1,50 @@
 import Link from 'next/link'
 import { Package, Shield, Clock, Star, User, CheckCircle } from 'lucide-react'
+import { prisma } from '@/lib/prisma'
 
-export default function Home() {
+export const dynamic = 'force-dynamic'
+
+async function getPopularCategories() {
+  try {
+    const admin = await prisma.admin.findFirst()
+    if (!admin || !admin.popularCategories) {
+      return []
+    }
+    
+    const categorySlugs = admin.popularCategories.split(',').map(s => s.trim()).filter(s => s)
+    
+    const categories = await prisma.category.findMany({
+      where: {
+        slug: {
+          in: categorySlugs
+        }
+      },
+      orderBy: {
+        name: 'asc'
+      }
+    })
+    
+    // Sort by the order in popularCategories string
+    return categorySlugs
+      .map(slug => categories.find(c => c.slug === slug))
+      .filter((c): c is typeof categories[0] => c !== undefined)
+  } catch (error) {
+    console.error('Error fetching popular categories:', error)
+    return []
+  }
+}
+
+const categoryEmojis: Record<string, string> = {
+  'car-seats': '🚗',
+  'travel-cots': '🛏️',
+  'prams': '🛴',
+  'high-chairs': '🪑',
+  'toys': '🧸',
+  'strollers': '👶',
+}
+
+export default async function Home() {
+  const popularCategories = await getPopularCategories()
   return (
     <div className="flex flex-col">
       {/* Hero Section */}
@@ -56,33 +99,35 @@ export default function Home() {
       </section>
 
       {/* Categories Section */}
-      <section className="py-20 px-4 bg-gradient-to-b from-vacation-sandLight to-white">
-        <div className="max-w-6xl mx-auto">
-          <h2 className="text-4xl font-bold text-center mb-16 text-gray-800">Popular Categories</h2>
-          <div className="grid md:grid-cols-3 gap-8">
-            <Link href="/products?category=car-seats" className="card hover:shadow-vacation transition-all duration-300 transform hover:-translate-y-2 group">
-              <div className="text-5xl mb-4">🚗</div>
-              <h3 className="text-2xl font-bold mb-3 text-gray-800 group-hover:text-vacation-orange transition-colors">Car Seats</h3>
-              <p className="text-gray-600 leading-relaxed">Safe and comfortable seats for all ages</p>
-            </Link>
-            <Link href="/products?category=travel-cots" className="card hover:shadow-vacation transition-all duration-300 transform hover:-translate-y-2 group">
-              <div className="text-5xl mb-4">🛏️</div>
-              <h3 className="text-2xl font-bold mb-3 text-gray-800 group-hover:text-vacation-ocean transition-colors">Travel Cots</h3>
-              <p className="text-gray-600 leading-relaxed">Portable sleeping solutions for your little ones</p>
-            </Link>
-            <Link href="/products?category=prams" className="card hover:shadow-vacation transition-all duration-300 transform hover:-translate-y-2 group">
-              <div className="text-5xl mb-4">🛴</div>
-              <h3 className="text-2xl font-bold mb-3 text-gray-800 group-hover:text-vacation-tropical transition-colors">Prams & Buggies</h3>
-              <p className="text-gray-600 leading-relaxed">Easy strollers for exploring Spain</p>
-            </Link>
+      {popularCategories.length > 0 && (
+        <section className="py-20 px-4 bg-gradient-to-b from-vacation-sandLight to-white">
+          <div className="max-w-6xl mx-auto">
+            <h2 className="text-4xl font-bold text-center mb-16 text-gray-800">Popular Categories</h2>
+            <div className={`grid gap-8 ${popularCategories.length === 1 ? 'md:grid-cols-1 max-w-md mx-auto' : popularCategories.length === 2 ? 'md:grid-cols-2 max-w-2xl mx-auto' : 'md:grid-cols-3'}`}>
+              {popularCategories.map((category) => (
+                <Link 
+                  key={category.id} 
+                  href={`/products?category=${category.slug}`}
+                  className="card hover:shadow-vacation transition-all duration-300 transform hover:-translate-y-2 group"
+                >
+                  <div className="text-5xl mb-4">{categoryEmojis[category.slug] || '📦'}</div>
+                  <h3 className="text-2xl font-bold mb-3 text-gray-800 group-hover:text-vacation-orange transition-colors">
+                    {category.name}
+                  </h3>
+                  <p className="text-gray-600 leading-relaxed">
+                    {category.description || `Browse our ${category.name.toLowerCase()}`}
+                  </p>
+                </Link>
+              ))}
+            </div>
+            <div className="text-center mt-12">
+              <Link href="/products" className="btn btn-primary text-lg">
+                🌟 View All Products
+              </Link>
+            </div>
           </div>
-          <div className="text-center mt-12">
-            <Link href="/products" className="btn btn-primary text-lg">
-              🌟 View All Products
-            </Link>
-          </div>
-        </div>
-      </section>
+        </section>
+      )}
 
       {/* Customer Account Section */}
       <section className="py-20 px-4 bg-gradient-to-br from-vacation-ocean to-vacation-oceanDark text-white">

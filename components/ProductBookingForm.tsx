@@ -11,6 +11,7 @@ interface ProductBookingFormProps {
     name: string
     image: string | null
     price: number
+    isBundle?: boolean
   }
 }
 
@@ -66,6 +67,7 @@ export default function ProductBookingForm({ product }: ProductBookingFormProps)
       price: weeklyPrice, // This is the weekly price
       image: product.image,
       quantity: 1,
+      isBundle: product.isBundle || false,
       // Store rental dates in the cart item
       rentalStartDate: startDate,
       rentalEndDate: endDate,

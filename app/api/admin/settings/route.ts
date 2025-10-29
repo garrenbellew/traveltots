@@ -21,6 +21,7 @@ export async function GET(request: NextRequest) {
       whatsappMessageDelivered: admin.whatsappMessageDelivered || '',
       whatsappMessageCompleted: admin.whatsappMessageCompleted || '',
       whatsappMessageCancelled: admin.whatsappMessageCancelled || '',
+      popularCategories: admin.popularCategories || '',
     })
   } catch (error) {
     console.error('Error fetching admin settings:', error)
@@ -41,6 +42,7 @@ export async function PUT(request: NextRequest) {
       whatsappMessageDelivered,
       whatsappMessageCompleted,
       whatsappMessageCancelled,
+      popularCategories,
     } = body
 
     // Update the first admin (you can modify this to update the logged-in admin)
@@ -52,6 +54,7 @@ export async function PUT(request: NextRequest) {
         whatsappMessageDelivered: whatsappMessageDelivered || null,
         whatsappMessageCompleted: whatsappMessageCompleted || null,
         whatsappMessageCancelled: whatsappMessageCancelled || null,
+        popularCategories: popularCategories || null,
       },
     })
 
