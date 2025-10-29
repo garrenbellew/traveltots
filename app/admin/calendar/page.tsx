@@ -272,6 +272,9 @@ export default function AdminCalendarPage() {
     checkDate.setHours(0, 0, 0, 0)
     
     return orders.filter(order => {
+      // Exclude cancelled orders
+      if (order.status === 'CANCELLED') return false
+      
       const startDate = new Date(order.rentalStartDate)
       startDate.setHours(0, 0, 0, 0)
       return startDate.getTime() === checkDate.getTime()
@@ -284,6 +287,9 @@ export default function AdminCalendarPage() {
     checkDate.setHours(0, 0, 0, 0)
     
     return orders.filter(order => {
+      // Exclude cancelled orders
+      if (order.status === 'CANCELLED') return false
+      
       const endDate = new Date(order.rentalEndDate)
       endDate.setHours(0, 0, 0, 0)
       return endDate.getTime() === checkDate.getTime()
@@ -518,7 +524,18 @@ export default function AdminCalendarPage() {
                     onClick={() => setSelectedOrder(order)}
                     className="w-full bg-green-50 border border-green-200 rounded-lg p-4 text-left hover:bg-green-100 hover:shadow-md transition-all"
                   >
-                    <p className="font-medium text-green-900 mb-1">{order.customerName}</p>
+                    <div className="flex items-start justify-between mb-1">
+                      <p className="font-medium text-green-900">{order.customerName}</p>
+                      <span className={`px-2 py-1 rounded-full text-xs font-medium ${
+                        order.status === 'PENDING' ? 'bg-yellow-100 text-yellow-800' :
+                        order.status === 'CONFIRMED' ? 'bg-blue-100 text-blue-800' :
+                        order.status === 'DELIVERED' ? 'bg-green-100 text-green-800' :
+                        order.status === 'COMPLETED' ? 'bg-gray-100 text-gray-800' :
+                        'bg-red-100 text-red-800'
+                      }`}>
+                        {order.status}
+                      </span>
+                    </div>
                     <p className="text-sm text-green-700">
                       {order.items.map(i => `${i.product.name} x${i.quantity}`).join(', ')}
                     </p>
@@ -551,7 +568,18 @@ export default function AdminCalendarPage() {
                     onClick={() => setSelectedOrder(order)}
                     className="w-full bg-blue-50 border border-blue-200 rounded-lg p-4 text-left hover:bg-blue-100 hover:shadow-md transition-all"
                   >
-                    <p className="font-medium text-blue-900 mb-1">{order.customerName}</p>
+                    <div className="flex items-start justify-between mb-1">
+                      <p className="font-medium text-blue-900">{order.customerName}</p>
+                      <span className={`px-2 py-1 rounded-full text-xs font-medium ${
+                        order.status === 'PENDING' ? 'bg-yellow-100 text-yellow-800' :
+                        order.status === 'CONFIRMED' ? 'bg-blue-100 text-blue-800' :
+                        order.status === 'DELIVERED' ? 'bg-green-100 text-green-800' :
+                        order.status === 'COMPLETED' ? 'bg-gray-100 text-gray-800' :
+                        'bg-red-100 text-red-800'
+                      }`}>
+                        {order.status}
+                      </span>
+                    </div>
                     <p className="text-sm text-blue-700">
                       {order.items.map(i => `${i.product.name} x${i.quantity}`).join(', ')}
                     </p>
