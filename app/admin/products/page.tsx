@@ -129,7 +129,7 @@ export default function AdminProductsPage() {
     setShowProductForm(true)
   }
 
-  async function handleProductFormSuccess() {
+  async function handleProductFormSuccess(product?: any) {
     // Small delay to ensure the API has finished processing
     await new Promise(resolve => setTimeout(resolve, 100))
     // Refresh the data

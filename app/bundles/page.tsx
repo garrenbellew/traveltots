@@ -11,6 +11,18 @@ async function getBundles() {
     },
     include: {
       category: true,
+      bundleProducts: {
+        include: {
+          includedProduct: {
+            include: {
+              category: true,
+            },
+          },
+        },
+      },
+    },
+    orderBy: {
+      createdAt: 'desc',
     },
   })
 }
@@ -33,7 +45,22 @@ export default async function BundlesPage() {
       ) : (
         <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-6">
           {bundles.map(bundle => (
-            <ProductCard key={bundle.id} product={bundle} />
+            <div key={bundle.id} className="card">
+              <ProductCard product={bundle} />
+              {bundle.bundleProducts && bundle.bundleProducts.length > 0 && (
+                <div className="mt-4 pt-4 border-t">
+                  <p className="text-sm font-semibold text-gray-700 mb-2">Includes:</p>
+                  <ul className="space-y-1">
+                    {bundle.bundleProducts.map((bp: any) => (
+                      <li key={bp.id} className="text-sm text-gray-600 flex items-center gap-2">
+                        <span className="font-medium">{bp.quantity}x</span>
+                        <span>{bp.includedProduct.name}</span>
+                      </li>
+                    ))}
+                  </ul>
+                </div>
+              )}
+            </div>
           ))}
         </div>
       )}

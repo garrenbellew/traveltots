@@ -25,6 +25,7 @@ export default function AdminNav() {
     { href: '/admin/dashboard', label: 'Dashboard', icon: LayoutDashboard },
     { href: '/admin/orders', label: 'Orders', icon: ShoppingCart },
     { href: '/admin/products', label: 'Products', icon: Package },
+    { href: '/admin/bundles', label: 'Bundles', icon: Package },
     { href: '/admin/clients', label: 'Clients', icon: Users },
     { href: '/admin/pages', label: 'Pages', icon: FileText },
     { href: '/admin/testimonials', label: 'Testimonials', icon: MessageCircle },
