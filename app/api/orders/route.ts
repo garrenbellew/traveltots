@@ -59,9 +59,15 @@ export async function POST(request: NextRequest) {
       console.log('No customerId provided, creating guest order')
     }
 
+    // Generate unique order number
+    const timestamp = Date.now()
+    const random = Math.floor(Math.random() * 10000).toString().padStart(4, '0')
+    const orderNumber = `TT-${timestamp}-${random}`
+
     // Create order
     const order = await prisma.order.create({
       data: {
+        orderNumber,
         customerId: validCustomerId,
         customerName,
         customerEmail,
