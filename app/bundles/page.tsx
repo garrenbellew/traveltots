@@ -1,7 +1,7 @@
 import { prisma } from '@/lib/prisma'
-import ProductCard from '@/components/ProductCard'
 import Link from 'next/link'
 import BundleBookingForm from '@/components/BundleBookingForm'
+import { formatCurrency } from '@/lib/utils'
 
 export const dynamic = 'force-dynamic'
 
@@ -55,31 +55,19 @@ export default async function BundlesPage() {
 
               {bundle.products.length > 0 ? (
                 <>
-                  <div className="mb-4">
-                    <p className="text-sm font-semibold text-gray-700 mb-3">
-                      This bundle includes:
-                    </p>
-                    <ul className="space-y-2 mb-6">
-                      {bundle.products.map(pb => (
-                        <li key={pb.id} className="flex items-center gap-3 text-gray-700">
-                          <span className="font-medium w-8">{pb.quantity}x</span>
-                          <span>{pb.product.name}</span>
-                        </li>
-                      ))}
-                    </ul>
-                  </div>
-
                   {/* Bundle Booking Form */}
                   <BundleBookingForm bundleId={bundle.id} bundleName={bundle.name} />
 
-                  <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-6 pt-6 border-t">
+                  <div className="bg-gray-50 rounded-lg p-4 space-y-2 mt-6">
+                    <p className="font-semibold mb-2">This bundle includes:</p>
                     {bundle.products.map(pb => (
                       <Link
-                        key={pb.product.id}
+                        key={pb.id}
                         href={`/products/${pb.product.slug}`}
-                        className="hover:opacity-80 transition-opacity"
+                        className="flex justify-between text-sm hover:text-primary-600 transition-colors"
                       >
-                        <ProductCard product={pb.product} />
+                        <span>{pb.product.name} x{pb.quantity}</span>
+                        <span className="font-medium text-gray-700">{formatCurrency(pb.product.price)} / week</span>
                       </Link>
                     ))}
                   </div>
