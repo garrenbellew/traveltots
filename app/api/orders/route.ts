@@ -110,16 +110,15 @@ export async function POST(request: NextRequest) {
 
     // Create stock blocks for each item
     for (const orderItem of order.items) {
-      for (let i = 0; i < orderItem.quantity; i++) {
-        await prisma.stockBlock.create({
-          data: {
-            productId: orderItem.productId,
-            orderId: order.id,
-            startDate: order.rentalStartDate,
-            endDate: order.rentalEndDate,
-          },
-        })
-      }
+      await prisma.stockBlock.create({
+        data: {
+          productId: orderItem.productId,
+          orderId: order.id,
+          quantity: orderItem.quantity,
+          startDate: order.rentalStartDate,
+          endDate: order.rentalEndDate,
+        },
+      })
     }
 
     // Order confirmation will be sent via WhatsApp by admin from the Orders page

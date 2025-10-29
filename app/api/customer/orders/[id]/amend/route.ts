@@ -100,17 +100,16 @@ export async function POST(
       const quantityDifference = newQuantity - originalQuantity
 
       if (quantityDifference > 0) {
-        // Adding more items - create additional stock blocks
-        for (let i = 0; i < quantityDifference; i++) {
-          await prisma.stockBlock.create({
-            data: {
-              productId: productId,
-              orderId: params.id,
-              startDate: order.rentalStartDate,
-              endDate: order.rentalEndDate,
-            },
-          })
-        }
+        // Adding more items - create additional stock block
+        await prisma.stockBlock.create({
+          data: {
+            productId: productId,
+            orderId: params.id,
+            quantity: quantityDifference,
+            startDate: order.rentalStartDate,
+            endDate: order.rentalEndDate,
+          },
+        })
       }
       // If quantity decreased, the stock blocks are already deleted above
     }

@@ -77,16 +77,15 @@ export async function PUT(
       if (existingBlocks === 0) {
         // Create stock blocks for each item
         for (const orderItem of currentOrder.items) {
-          for (let i = 0; i < orderItem.quantity; i++) {
-            await prisma.stockBlock.create({
-              data: {
-                productId: orderItem.productId,
-                orderId: params.id,
-                startDate: currentOrder.rentalStartDate,
-                endDate: currentOrder.rentalEndDate,
-              },
-            })
-          }
+          await prisma.stockBlock.create({
+            data: {
+              productId: orderItem.productId,
+              orderId: params.id,
+              quantity: orderItem.quantity,
+              startDate: currentOrder.rentalStartDate,
+              endDate: currentOrder.rentalEndDate,
+            },
+          })
         }
       }
     }
