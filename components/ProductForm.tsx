@@ -298,7 +298,6 @@ export default function ProductForm({ isOpen, onClose, product, onSuccess, categ
           {product?.id && (
             <BundleSelector productId={product.id} />
           )}
-        </div>
 
           <div className="flex justify-end gap-4 pt-4 border-t">
             <button

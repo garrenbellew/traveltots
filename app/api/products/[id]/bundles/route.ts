@@ -77,14 +77,23 @@ export async function PUT(
 
     // Create new bundle assignments
     if (bundleIds.length > 0) {
-      await prisma.productBundle.createMany({
-        data: bundleIds.map((item: { bundleId: string; quantity: number }) => ({
-          productId: params.id,
-          bundleId: item.bundleId,
-          quantity: item.quantity || 1,
-        })),
-        skipDuplicates: true,
-      })
+      // SQLite doesn't support skipDuplicates, so we need to check manually
+      for (const item of bundleIds) {
+        try {
+          await prisma.productBundle.create({
+            data: {
+              productId: params.id,
+              bundleId: item.bundleId,
+              quantity: item.quantity || 1,
+            },
+          })
+        } catch (error: any) {
+          // Ignore unique constraint violations (product already in bundle)
+          if (error.code !== 'P2002') {
+            throw error
+          }
+        }
+      }
     }
 
     // Return updated product with bundles

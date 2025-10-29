@@ -25,8 +25,13 @@ export async function GET(request: NextRequest) {
     return NextResponse.json(bundles)
   } catch (error: any) {
     console.error('Error fetching bundles:', error)
+    console.error('Error details:', {
+      message: error.message,
+      code: error.code,
+      meta: error.meta,
+    })
     return NextResponse.json(
-      { error: 'Failed to fetch bundles' },
+      { error: 'Failed to fetch bundles', details: error.message },
       { status: 500 }
     )
   }
