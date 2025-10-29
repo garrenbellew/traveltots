@@ -85,55 +85,57 @@ model StockBlock {
 model Order {
   id                     String        @id @default(cuid())
   orderNumber             String        @unique
+  customerId              String?
   customerName            String
   customerEmail           String
   customerPhone           String
+  customerAddress         String
+  flightDetails           String?
+  specialRequests         String?
+  rentalStartDate         DateTime
+  rentalEndDate           DateTime
   status                  String        @default("PENDING")
+  adminNotes              String?
+  termsAccepted           Boolean       @default(false)
+  totalPrice              Float
+  confirmedAt             DateTime?
+  completedAt             DateTime?
+  cancelledAt             DateTime?
   createdAt               DateTime      @default(now())
   updatedAt               DateTime      @updatedAt
-  confirmedAt             DateTime?
   deliveredAt             DateTime?
-  items                   OrderItem[]
-  stockBlocks             StockBlock[]
-  customerId              String?
-  customer                Customer?     @relation(fields: [customerId], references: [id])
-  messages                OrderMessage[]
   
   // Delivery coordination fields
-  deliveryType            String?
-  deliveryAddress         String?
-  arrivalDate             String?
+  deliveryType            String?        // "AIRPORT", "ACCOMMODATION", "DUAL"
+  // Airport delivery details
+  outboundAirport         String?
   arrivalTime             String?
-  departureDate           String?
-  departureTime           String?
+  onwardJourney           String?        // CAR_HIRE, TAXI, PRIVATE_TRANSFER, FRIEND_FAMILY
+  returnAirport           String?
+  returnArrivalTime       String?
+  returnFlightNumber       String?
+  returnDepartureTime     String?
+  // Accommodation delivery details
+  accommodationArrival     String?
+  accommodationDeparture   String?
   
-  // Airport-specific fields
-  flightNumberInbound     String?
-  inboundAirport          String?
-  inboundArrivalTime      String?
-  onwardJourney           String?
-  
-  // Return journey
-  flightNumberOutbound    String?
-  outboundAirport          String?
-  outboundDepartureTime    String?
-  arrivalTimeBeforeFlight  String?
+  customer                Customer?      @relation(fields: [customerId], references: [id])
+  items                   OrderItem[]
+  messages                 OrderMessage[]
+  stockBlocks             StockBlock[]
 
   @@map("Order")
 }
 
 model OrderItem {
-  id            String  @id @default(cuid())
-  orderId       String
-  productId     String
-  product       Product @relation(fields: [productId], references: [id])
-  quantity      Int
-  rentalStart   DateTime
-  rentalEnd     DateTime
-  order         Order   @relation(fields: [orderId], references: [id], onDelete: Cascade)
-  name          String
-  price         Float
-  slug          String?
+  id        String   @id @default(cuid())
+  orderId   String
+  productId String
+  quantity  Int      @default(1)
+  price     Float
+  createdAt DateTime @default(now())
+  product   Product  @relation(fields: [productId], references: [id])
+  order     Order    @relation(fields: [orderId], references: [id], onDelete: Cascade)
 
   @@map("OrderItem")
 }
@@ -168,13 +170,18 @@ model Customer {
 }
 
 model OrderMessage {
-  id          String   @id @default(cuid())
-  orderId     String
-  order       Order    @relation(fields: [orderId], references: [id])
-  message     String
-  isFromAdmin Boolean  @default(false)
-  createdAt   DateTime @default(now())
+  id         String    @id @default(cuid())
+  orderId    String
+  customerId String?
+  sender     String    @default("CUSTOMER")
+  message    String
+  isRead     Boolean   @default(false)
+  createdAt  DateTime  @default(now())
+  updatedAt  DateTime  @updatedAt
+  customer   Customer? @relation(fields: [customerId], references: [id])
+  order      Order     @relation(fields: [orderId], references: [id], onDelete: Cascade)
 
+  @@index([orderId])
   @@map("OrderMessage")
 }
 
