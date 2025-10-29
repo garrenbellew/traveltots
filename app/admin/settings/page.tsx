@@ -112,13 +112,27 @@ export default function AdminSettingsPage() {
       ])
 
       if (!settingsRes.ok) {
-        const errorData = await settingsRes.json()
-        throw new Error(errorData.error || errorData.details || 'Failed to save settings')
+        const errorText = await settingsRes.text()
+        let errorData
+        try {
+          errorData = JSON.parse(errorText)
+        } catch {
+          errorData = { error: errorText || 'Failed to save settings' }
+        }
+        console.error('Settings API error:', errorData)
+        throw new Error(errorData.details || errorData.error || 'Failed to save settings')
       }
       
       if (!pricingRes.ok) {
-        const errorData = await pricingRes.json()
-        throw new Error(errorData.error || errorData.details || 'Failed to save pricing configuration')
+        const errorText = await pricingRes.text()
+        let errorData
+        try {
+          errorData = JSON.parse(errorText)
+        } catch {
+          errorData = { error: errorText || 'Failed to save pricing configuration' }
+        }
+        console.error('Pricing API error:', errorData)
+        throw new Error(errorData.details || errorData.error || 'Failed to save pricing configuration')
       }
 
       setStatusMessage('Settings saved successfully!')
