@@ -3,7 +3,12 @@ const nextConfig = {
   reactStrictMode: true,
   images: {
     domains: ['localhost'],
-    remotePatterns: [],
+    remotePatterns: [
+      {
+        protocol: 'https',
+        hostname: 'res.cloudinary.com',
+      },
+    ],
   },
   eslint: {
     ignoreDuringBuilds: true,
