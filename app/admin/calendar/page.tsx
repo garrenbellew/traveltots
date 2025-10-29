@@ -1,6 +1,6 @@
 'use client'
 
-import { useEffect, useState } from 'react'
+import { useEffect, useState, useMemo, useRef } from 'react'
 import { useRouter } from 'next/navigation'
 import { formatDateShort, formatCurrency } from '@/lib/utils'
 import { Calendar as CalendarIcon, Clock, X, Phone, Mail, MapPin, MessageCircle, Send, AlertTriangle, Printer, ArrowUp, ArrowDown, GripVertical } from 'lucide-react'
@@ -242,6 +242,8 @@ export default function AdminCalendarPage() {
   const [deliveryPriority, setDeliveryPriority] = useState<string[]>([])
   const [collectionPriority, setCollectionPriority] = useState<string[]>([])
   const [showPrintView, setShowPrintView] = useState(false)
+  const prevDeliveryKeyRef = useRef<string>('')
+  const prevCollectionKeyRef = useRef<string>('')
 
   useEffect(() => {
     const session = localStorage.getItem('admin_session')
@@ -401,22 +403,29 @@ export default function AdminCalendarPage() {
   const stockWarnings = getStockWarnings(selectedDate)
   const today = new Date()
 
-  // Initialize priority lists when deliveries/collections change
+  // Create stable date string
+  const dateKey = useMemo(() => selectedDate.toISOString().split('T')[0], [selectedDate])
+
+  // Initialize priority lists when orders or date changes
   useEffect(() => {
-    const deliveryIds = deliveries.map(o => o.id)
-    if (JSON.stringify(deliveryIds) !== JSON.stringify(deliveryPriority)) {
-      setDeliveryPriority(deliveryIds)
+    const currentIds = deliveries.map(o => o.id).sort().join(',')
+    const newKey = `${dateKey}-${currentIds}`
+    
+    if (newKey !== prevDeliveryKeyRef.current) {
+      setDeliveryPriority(deliveries.length > 0 ? deliveries.map(o => o.id) : [])
+      prevDeliveryKeyRef.current = newKey
     }
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [deliveries.length, selectedDate])
+  }, [dateKey, orders, selectedDate])
 
   useEffect(() => {
-    const collectionIds = collections.map(o => o.id)
-    if (JSON.stringify(collectionIds) !== JSON.stringify(collectionPriority)) {
-      setCollectionPriority(collectionIds)
+    const currentIds = collections.map(o => o.id).sort().join(',')
+    const newKey = `${dateKey}-${currentIds}`
+    
+    if (newKey !== prevCollectionKeyRef.current) {
+      setCollectionPriority(collections.length > 0 ? collections.map(o => o.id) : [])
+      prevCollectionKeyRef.current = newKey
     }
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [collections.length, selectedDate])
+  }, [dateKey, orders, selectedDate])
 
   // Reorder functions
   const moveDeliveryUp = (index: number) => {
