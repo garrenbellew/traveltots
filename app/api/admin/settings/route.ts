@@ -45,24 +45,34 @@ export async function PUT(request: NextRequest) {
       popularCategories,
     } = body
 
-    // Update the first admin (you can modify this to update the logged-in admin)
-    const admin = await prisma.admin.updateMany({
-      where: {}, // Update all admins or specific one
+    // Get the first admin (you can modify this to get the logged-in admin)
+    const admin = await prisma.admin.findFirst()
+    
+    if (!admin) {
+      return NextResponse.json(
+        { error: 'Admin not found' },
+        { status: 404 }
+      )
+    }
+
+    // Update the admin with new settings
+    await prisma.admin.update({
+      where: { id: admin.id },
       data: {
         whatsappNumber: whatsappNumber || null,
         whatsappMessageConfirmed: whatsappMessageConfirmed || null,
         whatsappMessageDelivered: whatsappMessageDelivered || null,
         whatsappMessageCompleted: whatsappMessageCompleted || null,
         whatsappMessageCancelled: whatsappMessageCancelled || null,
-        popularCategories: popularCategories || null,
+        popularCategories: (popularCategories && popularCategories.trim()) ? popularCategories.trim() : null,
       },
     })
 
     return NextResponse.json({ success: true })
-  } catch (error) {
+  } catch (error: any) {
     console.error('Error updating admin settings:', error)
     return NextResponse.json(
-      { error: 'Failed to update settings' },
+      { error: 'Failed to update settings', details: error?.message || String(error) },
       { status: 500 }
     )
   }

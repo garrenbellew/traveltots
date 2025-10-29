@@ -111,15 +111,21 @@ export default function AdminSettingsPage() {
         })
       ])
 
-      if (!settingsRes.ok || !pricingRes.ok) {
-        throw new Error('Failed to save settings')
+      if (!settingsRes.ok) {
+        const errorData = await settingsRes.json()
+        throw new Error(errorData.error || errorData.details || 'Failed to save settings')
+      }
+      
+      if (!pricingRes.ok) {
+        const errorData = await pricingRes.json()
+        throw new Error(errorData.error || errorData.details || 'Failed to save pricing configuration')
       }
 
       setStatusMessage('Settings saved successfully!')
       setTimeout(() => setStatusMessage(''), 3000)
-    } catch (error) {
+    } catch (error: any) {
       console.error('Error saving settings:', error)
-      setStatusMessage('Failed to save settings')
+      setStatusMessage(error.message || 'Failed to save settings')
     } finally {
       setSaving(false)
     }
