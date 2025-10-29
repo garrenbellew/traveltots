@@ -389,21 +389,8 @@ export default function AdminCalendarPage() {
     return warnings
   }
 
-  if (loading) {
-    return (
-      <div className="min-h-screen bg-gray-50 flex items-center justify-center">
-        <p>Loading...</p>
-      </div>
-    )
-  }
-
-  const deliveries = getDeliveriesForDate(selectedDate)
-  const collections = getCollectionsForDate(selectedDate)
-  const activeRentals = getActiveRentalsForDate(selectedDate)
-  const stockWarnings = getStockWarnings(selectedDate)
-  const today = new Date()
-
   // Initialize priority lists - only use string dependencies to avoid infinite loops
+  // MUST be before any conditional returns to satisfy Rules of Hooks
   const dateKeyStr = selectedDate.toISOString().split('T')[0]
   const ordersIdStr = orders.map(o => o.id).sort().join(',') || ''
 
@@ -452,6 +439,20 @@ export default function AdminCalendarPage() {
     // Only depend on string values, not arrays or objects
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [dateKeyStr, ordersIdStr])
+
+  if (loading) {
+    return (
+      <div className="min-h-screen bg-gray-50 flex items-center justify-center">
+        <p>Loading...</p>
+      </div>
+    )
+  }
+
+  const deliveries = getDeliveriesForDate(selectedDate)
+  const collections = getCollectionsForDate(selectedDate)
+  const activeRentals = getActiveRentalsForDate(selectedDate)
+  const stockWarnings = getStockWarnings(selectedDate)
+  const today = new Date()
 
   // Reorder functions
   const moveDeliveryUp = (index: number) => {
