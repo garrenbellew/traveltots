@@ -156,15 +156,16 @@ model Page {
 }
 
 model Customer {
-  id        String        @id @default(cuid())
+  id        String         @id @default(cuid())
   name      String
-  email     String        @unique
+  email     String         @unique
   phone     String
   password  String
-  createdAt DateTime      @default(now())
-  updatedAt DateTime      @updatedAt
+  createdAt DateTime       @default(now())
+  updatedAt DateTime       @updatedAt
   orders    Order[]
-  isActive  Boolean       @default(true)
+  messages  OrderMessage[]
+  isActive  Boolean        @default(true)
 
   @@map("Customer")
 }
