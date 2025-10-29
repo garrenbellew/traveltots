@@ -12,6 +12,7 @@ import {
   Settings,
   Users,
   MessageCircle,
+  Database,
   LogOut 
 } from 'lucide-react'
 import { useRouter } from 'next/navigation'
@@ -30,6 +31,7 @@ export default function AdminNav() {
     { href: '/admin/stock-report', label: 'Stock Report', icon: AlertTriangle },
     { href: '/admin/calendar', label: 'Calendar', icon: Calendar },
     { href: '/admin/settings', label: 'Settings', icon: Settings },
+    { href: '/admin/seed', label: 'Seed DB', icon: Database },
   ]
 
   const handleLogout = () => {
