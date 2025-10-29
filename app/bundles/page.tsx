@@ -58,16 +58,21 @@ export default async function BundlesPage() {
                   {/* Bundle Booking Form */}
                   <BundleBookingForm bundleId={bundle.id} bundleName={bundle.name} />
 
-                  <div className="bg-gray-50 rounded-lg p-4 space-y-2 mt-6">
+                  <div className="bg-gray-50 rounded-lg p-4 space-y-3 mt-6">
                     <p className="font-semibold mb-2">This bundle includes:</p>
                     {bundle.products.map(pb => (
                       <Link
                         key={pb.id}
                         href={`/products/${pb.product.slug}`}
-                        className="flex justify-between text-sm hover:text-primary-600 transition-colors"
+                        className="block hover:text-primary-600 transition-colors border-b border-gray-200 pb-2 last:border-b-0 last:pb-0"
                       >
-                        <span>{pb.product.name} x{pb.quantity}</span>
-                        <span className="font-medium text-gray-700">{formatCurrency(pb.product.price)} / week</span>
+                        <div className="flex justify-between items-start mb-1">
+                          <span className="font-medium text-sm">{pb.product.name} x{pb.quantity}</span>
+                          <span className="font-medium text-gray-700 text-sm">{formatCurrency(pb.product.price)} / week</span>
+                        </div>
+                        {pb.product.description && (
+                          <p className="text-xs text-gray-600 mt-1 line-clamp-2">{pb.product.description}</p>
+                        )}
                       </Link>
                     ))}
                   </div>
