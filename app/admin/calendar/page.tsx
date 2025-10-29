@@ -3,7 +3,7 @@
 import { useEffect, useState } from 'react'
 import { useRouter } from 'next/navigation'
 import { formatDateShort, formatCurrency } from '@/lib/utils'
-import { Calendar as CalendarIcon, Clock, X, Phone, Mail, MapPin, MessageCircle, Send, AlertTriangle } from 'lucide-react'
+import { Calendar as CalendarIcon, Clock, X, Phone, Mail, MapPin, MessageCircle, Send, AlertTriangle, Printer, ArrowUp, ArrowDown, GripVertical } from 'lucide-react'
 import AdminNav from '@/components/AdminNav'
 
 interface Order {
@@ -239,6 +239,9 @@ export default function AdminCalendarPage() {
   const [loading, setLoading] = useState(true)
   const [selectedDate, setSelectedDate] = useState(new Date())
   const [selectedOrder, setSelectedOrder] = useState<Order | null>(null)
+  const [deliveryPriority, setDeliveryPriority] = useState<string[]>([])
+  const [collectionPriority, setCollectionPriority] = useState<string[]>([])
+  const [showPrintView, setShowPrintView] = useState(false)
 
   useEffect(() => {
     const session = localStorage.getItem('admin_session')
@@ -398,6 +401,61 @@ export default function AdminCalendarPage() {
   const stockWarnings = getStockWarnings(selectedDate)
   const today = new Date()
 
+  // Initialize priority lists when deliveries/collections change
+  useEffect(() => {
+    const deliveryIds = deliveries.map(o => o.id)
+    if (JSON.stringify(deliveryIds) !== JSON.stringify(deliveryPriority)) {
+      setDeliveryPriority(deliveryIds)
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [deliveries.length, selectedDate])
+
+  useEffect(() => {
+    const collectionIds = collections.map(o => o.id)
+    if (JSON.stringify(collectionIds) !== JSON.stringify(collectionPriority)) {
+      setCollectionPriority(collectionIds)
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [collections.length, selectedDate])
+
+  // Reorder functions
+  const moveDeliveryUp = (index: number) => {
+    if (index === 0) return
+    const newPriority = [...deliveryPriority]
+    ;[newPriority[index - 1], newPriority[index]] = [newPriority[index], newPriority[index - 1]]
+    setDeliveryPriority(newPriority)
+  }
+
+  const moveDeliveryDown = (index: number) => {
+    if (index === deliveryPriority.length - 1) return
+    const newPriority = [...deliveryPriority]
+    ;[newPriority[index], newPriority[index + 1]] = [newPriority[index + 1], newPriority[index]]
+    setDeliveryPriority(newPriority)
+  }
+
+  const moveCollectionUp = (index: number) => {
+    if (index === 0) return
+    const newPriority = [...collectionPriority]
+    ;[newPriority[index - 1], newPriority[index]] = [newPriority[index], newPriority[index - 1]]
+    setCollectionPriority(newPriority)
+  }
+
+  const moveCollectionDown = (index: number) => {
+    if (index === collectionPriority.length - 1) return
+    const newPriority = [...collectionPriority]
+    ;[newPriority[index], newPriority[index + 1]] = [newPriority[index + 1], newPriority[index]]
+    setCollectionPriority(newPriority)
+  }
+
+  // Get ordered deliveries and collections based on priority
+  const orderedDeliveries = deliveryPriority
+    .map(id => deliveries.find(o => o.id === id))
+    .filter((o): o is Order => o !== undefined)
+
+  const orderedCollections = collectionPriority
+    .map(id => collections.find(o => o.id === id))
+    .filter((o): o is Order => o !== undefined)
+
   return (
     <div className="min-h-screen bg-gray-50">
       <AdminNav />
@@ -505,6 +563,124 @@ export default function AdminCalendarPage() {
           </div>
         )}
 
+        {/* Driving Plan */}
+        {(orderedDeliveries.length > 0 || orderedCollections.length > 0) && (
+          <div className="card mb-8">
+            <div className="flex items-center justify-between mb-6">
+              <h2 className="text-2xl font-bold">🚗 Driving Plan - {formatDateShort(selectedDate)}</h2>
+              <button
+                onClick={() => setShowPrintView(true)}
+                className="btn btn-primary flex items-center gap-2"
+              >
+                <Printer size={18} />
+                Print Driving Plan
+              </button>
+            </div>
+
+            <div className="grid md:grid-cols-2 gap-8">
+              {/* Deliveries Priority List */}
+              {orderedDeliveries.length > 0 && (
+                <div>
+                  <h3 className="font-semibold text-lg mb-4 text-green-700">Deliveries (Priority Order)</h3>
+                  <div className="space-y-2">
+                    {orderedDeliveries.map((order, index) => (
+                      <div
+                        key={order.id}
+                        className="bg-green-50 border border-green-200 rounded-lg p-3 flex items-center gap-3"
+                      >
+                        <div className="flex flex-col gap-1">
+                          <button
+                            onClick={() => moveDeliveryUp(index)}
+                            disabled={index === 0}
+                            className="p-1 hover:bg-green-100 rounded disabled:opacity-30 disabled:cursor-not-allowed"
+                            title="Move up"
+                          >
+                            <ArrowUp size={16} />
+                          </button>
+                          <button
+                            onClick={() => moveDeliveryDown(index)}
+                            disabled={index === orderedDeliveries.length - 1}
+                            className="p-1 hover:bg-green-100 rounded disabled:opacity-30 disabled:cursor-not-allowed"
+                            title="Move down"
+                          >
+                            <ArrowDown size={16} />
+                          </button>
+                        </div>
+                        <div className="flex-1">
+                          <div className="flex items-center gap-2 mb-1">
+                            <span className="w-6 h-6 bg-green-600 text-white rounded-full flex items-center justify-center text-xs font-bold">
+                              {index + 1}
+                            </span>
+                            <p className="font-medium text-green-900">{order.customerName}</p>
+                          </div>
+                          <p className="text-sm text-green-700">{order.customerAddress}</p>
+                          <p className="text-xs text-green-600 mt-1">{order.customerPhone}</p>
+                        </div>
+                        <button
+                          onClick={() => setSelectedOrder(order)}
+                          className="text-green-600 hover:text-green-800 text-sm"
+                        >
+                          Details
+                        </button>
+                      </div>
+                    ))}
+                  </div>
+                </div>
+              )}
+
+              {/* Collections Priority List */}
+              {orderedCollections.length > 0 && (
+                <div>
+                  <h3 className="font-semibold text-lg mb-4 text-blue-700">Collections (Priority Order)</h3>
+                  <div className="space-y-2">
+                    {orderedCollections.map((order, index) => (
+                      <div
+                        key={order.id}
+                        className="bg-blue-50 border border-blue-200 rounded-lg p-3 flex items-center gap-3"
+                      >
+                        <div className="flex flex-col gap-1">
+                          <button
+                            onClick={() => moveCollectionUp(index)}
+                            disabled={index === 0}
+                            className="p-1 hover:bg-blue-100 rounded disabled:opacity-30 disabled:cursor-not-allowed"
+                            title="Move up"
+                          >
+                            <ArrowUp size={16} />
+                          </button>
+                          <button
+                            onClick={() => moveCollectionDown(index)}
+                            disabled={index === orderedCollections.length - 1}
+                            className="p-1 hover:bg-blue-100 rounded disabled:opacity-30 disabled:cursor-not-allowed"
+                            title="Move down"
+                          >
+                            <ArrowDown size={16} />
+                          </button>
+                        </div>
+                        <div className="flex-1">
+                          <div className="flex items-center gap-2 mb-1">
+                            <span className="w-6 h-6 bg-blue-600 text-white rounded-full flex items-center justify-center text-xs font-bold">
+                              {index + 1}
+                            </span>
+                            <p className="font-medium text-blue-900">{order.customerName}</p>
+                          </div>
+                          <p className="text-sm text-blue-700">{order.customerAddress}</p>
+                          <p className="text-xs text-blue-600 mt-1">{order.customerPhone}</p>
+                        </div>
+                        <button
+                          onClick={() => setSelectedOrder(order)}
+                          className="text-blue-600 hover:text-blue-800 text-sm"
+                        >
+                          Details
+                        </button>
+                      </div>
+                    ))}
+                  </div>
+                </div>
+              )}
+            </div>
+          </div>
+        )}
+
         {/* Deliveries and Collections */}
         <div className="grid md:grid-cols-2 gap-8">
           {/* Deliveries */}
@@ -602,6 +778,183 @@ export default function AdminCalendarPage() {
           order={selectedOrder}
           onClose={() => setSelectedOrder(null)}
         />
+      )}
+
+      {/* Print View Modal */}
+      {showPrintView && (
+        <div className="fixed inset-0 bg-black bg-opacity-50 z-50 flex items-center justify-center p-4">
+          <div className="bg-white rounded-lg shadow-xl max-w-4xl w-full max-h-[90vh] overflow-y-auto">
+            <div className="flex justify-between items-center p-6 border-b no-print">
+              <h2 className="text-2xl font-bold">Driving Plan - {formatDateShort(selectedDate)}</h2>
+              <div className="flex gap-2">
+                <button
+                  onClick={() => window.print()}
+                  className="btn btn-primary flex items-center gap-2"
+                >
+                  <Printer size={18} />
+                  Print
+                </button>
+                <button
+                  onClick={() => setShowPrintView(false)}
+                  className="btn btn-secondary"
+                >
+                  Close
+                </button>
+              </div>
+            </div>
+
+            <div className="p-6 print-view">
+              <style jsx global>{`
+                @media print {
+                  @page {
+                    margin: 1cm;
+                    size: A4;
+                  }
+                  body * {
+                    visibility: hidden;
+                  }
+                  .print-view, .print-view * {
+                    visibility: visible;
+                  }
+                  .print-view {
+                    position: absolute;
+                    left: 0;
+                    top: 0;
+                    width: 100%;
+                    max-width: 100%;
+                    padding: 0;
+                    margin: 0;
+                  }
+                  .print-view .no-print {
+                    display: none !important;
+                  }
+                  .print-view button {
+                    display: none !important;
+                  }
+                  .print-view h1, .print-view h2 {
+                    page-break-after: avoid;
+                  }
+                  .print-view div {
+                    page-break-inside: avoid;
+                  }
+                }
+              `}</style>
+
+              {/* Header */}
+              <div className="text-center mb-8 pb-4 border-b">
+                <h1 className="text-3xl font-bold mb-2">Travel Tots - Driving Plan</h1>
+                <p className="text-xl text-gray-700">{formatDateShort(selectedDate)}</p>
+              </div>
+
+              {/* Deliveries Section */}
+              {orderedDeliveries.length > 0 && (
+                <div className="mb-8">
+                  <h2 className="text-2xl font-bold mb-4 pb-2 border-b-2 border-green-600 text-green-700">
+                    🚚 DELIVERIES ({orderedDeliveries.length})
+                  </h2>
+                  <div className="space-y-4">
+                    {orderedDeliveries.map((order, index) => (
+                      <div key={order.id} className="border border-green-300 rounded-lg p-4 break-inside-avoid">
+                        <div className="flex items-center gap-3 mb-3">
+                          <span className="w-10 h-10 bg-green-600 text-white rounded-full flex items-center justify-center text-lg font-bold flex-shrink-0">
+                            {index + 1}
+                          </span>
+                          <div className="flex-1">
+                            <h3 className="text-xl font-bold text-gray-900">{order.customerName}</h3>
+                            <p className="text-sm text-gray-600">Status: <span className="font-semibold">{order.status}</span></p>
+                          </div>
+                        </div>
+                        
+                        <div className="grid md:grid-cols-2 gap-4 mt-3">
+                          <div>
+                            <p className="text-sm font-semibold text-gray-700 mb-1">📍 Address:</p>
+                            <p className="text-gray-900">{order.customerAddress}</p>
+                          </div>
+                          <div>
+                            <p className="text-sm font-semibold text-gray-700 mb-1">📞 Contact:</p>
+                            <p className="text-gray-900">{order.customerPhone}</p>
+                            <p className="text-gray-600 text-sm">{order.customerEmail}</p>
+                          </div>
+                        </div>
+
+                        <div className="mt-3">
+                          <p className="text-sm font-semibold text-gray-700 mb-2">📦 Items:</p>
+                          <ul className="list-disc list-inside text-gray-900">
+                            {order.items.map((item, idx) => (
+                              <li key={idx}>
+                                {item.product.name} - Quantity: {item.quantity}
+                              </li>
+                            ))}
+                          </ul>
+                        </div>
+
+                        {order.specialRequests && (
+                          <div className="mt-3 p-2 bg-yellow-50 border border-yellow-200 rounded">
+                            <p className="text-sm font-semibold text-gray-700 mb-1">📝 Notes:</p>
+                            <p className="text-sm text-gray-900">{order.specialRequests}</p>
+                          </div>
+                        )}
+                      </div>
+                    ))}
+                  </div>
+                </div>
+              )}
+
+              {/* Collections Section */}
+              {orderedCollections.length > 0 && (
+                <div className="mb-8">
+                  <h2 className="text-2xl font-bold mb-4 pb-2 border-b-2 border-blue-600 text-blue-700">
+                    🏠 COLLECTIONS ({orderedCollections.length})
+                  </h2>
+                  <div className="space-y-4">
+                    {orderedCollections.map((order, index) => (
+                      <div key={order.id} className="border border-blue-300 rounded-lg p-4 break-inside-avoid">
+                        <div className="flex items-center gap-3 mb-3">
+                          <span className="w-10 h-10 bg-blue-600 text-white rounded-full flex items-center justify-center text-lg font-bold flex-shrink-0">
+                            {index + 1}
+                          </span>
+                          <div className="flex-1">
+                            <h3 className="text-xl font-bold text-gray-900">{order.customerName}</h3>
+                            <p className="text-sm text-gray-600">Status: <span className="font-semibold">{order.status}</span></p>
+                          </div>
+                        </div>
+                        
+                        <div className="grid md:grid-cols-2 gap-4 mt-3">
+                          <div>
+                            <p className="text-sm font-semibold text-gray-700 mb-1">📍 Address:</p>
+                            <p className="text-gray-900">{order.customerAddress}</p>
+                          </div>
+                          <div>
+                            <p className="text-sm font-semibold text-gray-700 mb-1">📞 Contact:</p>
+                            <p className="text-gray-900">{order.customerPhone}</p>
+                            <p className="text-gray-600 text-sm">{order.customerEmail}</p>
+                          </div>
+                        </div>
+
+                        <div className="mt-3">
+                          <p className="text-sm font-semibold text-gray-700 mb-2">📦 Items to Collect:</p>
+                          <ul className="list-disc list-inside text-gray-900">
+                            {order.items.map((item, idx) => (
+                              <li key={idx}>
+                                {item.product.name} - Quantity: {item.quantity}
+                              </li>
+                            ))}
+                          </ul>
+                        </div>
+                      </div>
+                    ))}
+                  </div>
+                </div>
+              )}
+
+              {/* Footer */}
+              <div className="mt-8 pt-4 border-t text-center text-sm text-gray-600">
+                <p>Travel Tots - Quality Baby & Toddler Equipment Hire</p>
+                <p>Generated: {new Date().toLocaleString()}</p>
+              </div>
+            </div>
+          </div>
+        </div>
       )}
     </div>
   )
