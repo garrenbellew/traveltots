@@ -188,19 +188,22 @@ export async function POST() {
         continue
       }
 
-      // Use placeholder image - in production, you'd upload real images
+      // Use placeholder image from external service
       const { categorySlug, ...productFields } = productData
+      // Use placeholder.com for images - you can replace these with actual uploaded images later
+      const placeholderImage = `https://placehold.co/400x400/e8f4f8/2563eb?text=${encodeURIComponent(productData.name)}`
+      
       await prisma.product.upsert({
         where: { slug: productData.slug },
         update: {
           ...productFields,
           categoryId,
-          image: `/products/placeholder-${productData.slug}.jpg`,
+          image: placeholderImage,
         },
         create: {
           ...productFields,
           categoryId,
-          image: `/products/placeholder-${productData.slug}.jpg`,
+          image: placeholderImage,
         },
       })
     }
