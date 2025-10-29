@@ -1,6 +1,6 @@
 'use client'
 
-import { useEffect, useState, useMemo, useRef } from 'react'
+import { useEffect, useState, useRef } from 'react'
 import { useRouter } from 'next/navigation'
 import { formatDateShort, formatCurrency } from '@/lib/utils'
 import { Calendar as CalendarIcon, Clock, X, Phone, Mail, MapPin, MessageCircle, Send, AlertTriangle, Printer, ArrowUp, ArrowDown, GripVertical } from 'lucide-react'
@@ -403,29 +403,55 @@ export default function AdminCalendarPage() {
   const stockWarnings = getStockWarnings(selectedDate)
   const today = new Date()
 
-  // Create stable date string
-  const dateKey = useMemo(() => selectedDate.toISOString().split('T')[0], [selectedDate])
+  // Initialize priority lists - only use string dependencies to avoid infinite loops
+  const dateKeyStr = selectedDate.toISOString().split('T')[0]
+  const ordersIdStr = orders.map(o => o.id).sort().join(',') || ''
 
-  // Initialize priority lists when orders or date changes
   useEffect(() => {
-    const currentIds = deliveries.map(o => o.id).sort().join(',')
-    const newKey = `${dateKey}-${currentIds}`
+    // Recalculate deliveries for this date (access orders and selectedDate from closure)
+    const dateCheck = new Date(selectedDate)
+    dateCheck.setHours(0, 0, 0, 0)
+    
+    const currentDeliveries = orders.filter(order => {
+      if (order.status === 'CANCELLED') return false
+      const startDate = new Date(order.rentalStartDate)
+      startDate.setHours(0, 0, 0, 0)
+      return startDate.getTime() === dateCheck.getTime()
+    })
+
+    const currentIds = currentDeliveries.map(o => o.id).sort().join(',')
+    const newKey = `${dateKeyStr}-${ordersIdStr}-${currentIds}`
     
     if (newKey !== prevDeliveryKeyRef.current) {
-      setDeliveryPriority(deliveries.length > 0 ? deliveries.map(o => o.id) : [])
+      setDeliveryPriority(currentDeliveries.length > 0 ? currentDeliveries.map(o => o.id) : [])
       prevDeliveryKeyRef.current = newKey
     }
-  }, [dateKey, orders, selectedDate])
+    // Only depend on string values, not arrays or objects
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [dateKeyStr, ordersIdStr])
 
   useEffect(() => {
-    const currentIds = collections.map(o => o.id).sort().join(',')
-    const newKey = `${dateKey}-${currentIds}`
+    // Recalculate collections for this date (access orders and selectedDate from closure)
+    const dateCheck = new Date(selectedDate)
+    dateCheck.setHours(0, 0, 0, 0)
+    
+    const currentCollections = orders.filter(order => {
+      if (order.status === 'CANCELLED') return false
+      const endDate = new Date(order.rentalEndDate)
+      endDate.setHours(0, 0, 0, 0)
+      return endDate.getTime() === dateCheck.getTime()
+    })
+
+    const currentIds = currentCollections.map(o => o.id).sort().join(',')
+    const newKey = `${dateKeyStr}-${ordersIdStr}-${currentIds}`
     
     if (newKey !== prevCollectionKeyRef.current) {
-      setCollectionPriority(collections.length > 0 ? collections.map(o => o.id) : [])
+      setCollectionPriority(currentCollections.length > 0 ? currentCollections.map(o => o.id) : [])
       prevCollectionKeyRef.current = newKey
     }
-  }, [dateKey, orders, selectedDate])
+    // Only depend on string values, not arrays or objects
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [dateKeyStr, ordersIdStr])
 
   // Reorder functions
   const moveDeliveryUp = (index: number) => {
