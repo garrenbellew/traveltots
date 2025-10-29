@@ -3,6 +3,14 @@ export const dynamic = 'force-dynamic'
 import { writeFile, mkdir } from 'fs/promises'
 import { join } from 'path'
 import { existsSync } from 'fs'
+import { v2 as cloudinary } from 'cloudinary'
+
+// Configure Cloudinary
+cloudinary.config({
+  cloud_name: process.env.CLOUDINARY_CLOUD_NAME,
+  api_key: process.env.CLOUDINARY_API_KEY,
+  api_secret: process.env.CLOUDINARY_API_SECRET,
+})
 
 export async function POST(request: NextRequest) {
   try {
@@ -39,6 +47,39 @@ export async function POST(request: NextRequest) {
     const bytes = await file.arrayBuffer()
     const buffer = Buffer.from(bytes)
 
+    // Try Cloudinary first if configured
+    if (process.env.CLOUDINARY_CLOUD_NAME && process.env.CLOUDINARY_API_KEY && process.env.CLOUDINARY_API_SECRET) {
+      try {
+        console.log('Uploading to Cloudinary')
+        const result = await new Promise((resolve, reject) => {
+          cloudinary.uploader.upload_stream(
+            {
+              resource_type: 'auto',
+              folder: 'traveltots/products',
+            },
+            (error, result) => {
+              if (error) reject(error)
+              else resolve(result)
+            }
+          ).end(buffer)
+        })
+        
+        console.log('Upload successful to Cloudinary:', result)
+        
+        return NextResponse.json({
+          success: true,
+          url: (result as any).secure_url,
+          fileName: (result as any).public_id,
+        })
+      } catch (cloudinaryError) {
+        console.error('Cloudinary upload failed:', cloudinaryError)
+        // Fall through to local filesystem
+      }
+    }
+
+    // Fallback to local filesystem
+    console.log('Using local filesystem for upload')
+    
     // Create uploads directory if it doesn't exist
     const uploadDir = join(process.cwd(), 'public', 'products')
     console.log('Upload directory:', uploadDir)
