@@ -1,19 +1,19 @@
 import { prisma } from '@/lib/prisma'
 import ProductCard from '@/components/ProductCard'
+import Link from 'next/link'
+import BundleBookingForm from '@/components/BundleBookingForm'
 
 export const dynamic = 'force-dynamic'
 
 async function getBundles() {
-  return await prisma.product.findMany({
+  return await prisma.bundle.findMany({
     where: {
       isActive: true,
-      isBundle: true,
     },
     include: {
-      category: true,
-      bundleProducts: {
+      products: {
         include: {
-          includedProduct: {
+          product: {
             include: {
               category: true,
             },
@@ -43,22 +43,49 @@ export default async function BundlesPage() {
           <p className="text-gray-600 text-lg">No bundles available at the moment.</p>
         </div>
       ) : (
-        <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-6">
+        <div className="space-y-12">
           {bundles.map(bundle => (
             <div key={bundle.id} className="card">
-              <ProductCard product={bundle} />
-              {bundle.bundleProducts && bundle.bundleProducts.length > 0 && (
-                <div className="mt-4 pt-4 border-t">
-                  <p className="text-sm font-semibold text-gray-700 mb-2">Includes:</p>
-                  <ul className="space-y-1">
-                    {bundle.bundleProducts.map((bp: any) => (
-                      <li key={bp.id} className="text-sm text-gray-600 flex items-center gap-2">
-                        <span className="font-medium">{bp.quantity}x</span>
-                        <span>{bp.includedProduct.name}</span>
-                      </li>
+              <div className="mb-6">
+                <h2 className="text-2xl font-bold mb-2">{bundle.name}</h2>
+                {bundle.description && (
+                  <p className="text-gray-600">{bundle.description}</p>
+                )}
+              </div>
+
+              {bundle.products.length > 0 ? (
+                <>
+                  <div className="mb-4">
+                    <p className="text-sm font-semibold text-gray-700 mb-3">
+                      This bundle includes:
+                    </p>
+                    <ul className="space-y-2 mb-6">
+                      {bundle.products.map(pb => (
+                        <li key={pb.id} className="flex items-center gap-3 text-gray-700">
+                          <span className="font-medium w-8">{pb.quantity}x</span>
+                          <span>{pb.product.name}</span>
+                        </li>
+                      ))}
+                    </ul>
+                  </div>
+
+                  {/* Bundle Booking Form */}
+                  <BundleBookingForm bundleId={bundle.id} bundleName={bundle.name} />
+
+                  <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-6 pt-6 border-t">
+                    {bundle.products.map(pb => (
+                      <Link
+                        key={pb.product.id}
+                        href={`/products/${pb.product.slug}`}
+                        className="hover:opacity-80 transition-opacity"
+                      >
+                        <ProductCard product={pb.product} />
+                      </Link>
                     ))}
-                  </ul>
-                </div>
+                  </div>
+                </>
+              ) : (
+                <p className="text-gray-500 italic">No products in this bundle yet.</p>
               )}
             </div>
           ))}

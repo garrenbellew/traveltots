@@ -19,7 +19,6 @@ interface Product {
   reserved?: number
   available?: number
   isActive: boolean
-  isBundle?: boolean
   category: { name: string }
   categoryId: string
 }

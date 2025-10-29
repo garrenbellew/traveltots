@@ -10,7 +10,6 @@ interface CartItem {
   productName: string
   quantity: number
   price: number
-  isBundle?: boolean
   rentalStartDate?: string
   rentalEndDate?: string
   days?: number

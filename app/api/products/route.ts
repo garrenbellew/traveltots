@@ -6,7 +6,6 @@ export async function GET(request: NextRequest) {
   try {
     const searchParams = request.nextUrl.searchParams
     const categorySlug = searchParams.get('category')
-    const bundlesOnly = searchParams.get('bundles') === 'true'
     const all = searchParams.get('all') === 'true'
 
     const where: any = {}
@@ -20,10 +19,6 @@ export async function GET(request: NextRequest) {
       where.category = {
         slug: categorySlug,
       }
-    }
-
-    if (bundlesOnly) {
-      where.isBundle = true
     }
 
     const products = await prisma.product.findMany({
@@ -49,7 +44,7 @@ export async function GET(request: NextRequest) {
 export async function POST(request: NextRequest) {
   try {
     const body = await request.json()
-    const { name, slug, description, price, image, categoryId, totalStock, isActive, isBundle } = body
+    const { name, slug, description, price, image, categoryId, totalStock, isActive } = body
 
     // Basic validation
     if (!name || !slug || !description || !price || !categoryId) {
@@ -69,7 +64,6 @@ export async function POST(request: NextRequest) {
         categoryId,
         totalStock: parseInt(totalStock) || 1,
         isActive: isActive ?? true,
-        isBundle: isBundle ?? false,
       },
       include: {
         category: true,

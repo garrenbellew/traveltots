@@ -39,6 +39,19 @@ model Category {
   @@map("Category")
 }
 
+model Bundle {
+  id          String          @id @default(cuid())
+  name        String          @unique
+  slug        String          @unique
+  description String?
+  isActive    Boolean         @default(true)
+  createdAt   DateTime        @default(now())
+  updatedAt   DateTime        @updatedAt
+  products    ProductBundle[]
+
+  @@map("Bundle")
+}
+
 model Product {
   id                String       @id @default(cuid())
   name              String
@@ -52,21 +65,24 @@ model Product {
   createdAt         DateTime     @default(now())
   updatedAt         DateTime     @updatedAt
   isActive          Boolean      @default(true)
-  isBundle          Boolean      @default(false)
   stockBlocks       StockBlock[]
   orderItems        OrderItem[]
-  bundles           ProductBundle[] @relation("BundleItems")
+  bundles           ProductBundle[]
 
   @@map("Product")
 }
 
 model ProductBundle {
   id        String   @id @default(cuid())
-  productId String
   bundleId  String
-  product   Product  @relation("BundleItems", fields: [productId], references: [id])
-  quantity  Int
+  productId String
+  quantity  Int      @default(1)
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+  bundle    Bundle   @relation(fields: [bundleId], references: [id], onDelete: Cascade)
+  product   Product  @relation(fields: [productId], references: [id], onDelete: Cascade)
 
+  @@unique([bundleId, productId])
   @@map("ProductBundle")
 }
 

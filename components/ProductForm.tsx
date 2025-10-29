@@ -2,6 +2,7 @@
 
 import { useState, useEffect } from 'react'
 import { X, Upload } from 'lucide-react'
+import BundleSelector from './BundleSelector'
 
 interface Category {
   id: string
@@ -18,7 +19,6 @@ interface Product {
   categoryId?: string
   totalStock?: number
   isActive?: boolean
-  isBundle?: boolean
 }
 
 interface ProductFormProps {
@@ -27,10 +27,9 @@ interface ProductFormProps {
   product?: Product
   onSuccess: (product: Product) => void
   categories: Category[]
-  isBundle?: boolean // Force bundle mode when creating from bundles page
 }
 
-export default function ProductForm({ isOpen, onClose, product, onSuccess, categories, isBundle: forceBundle }: ProductFormProps) {
+export default function ProductForm({ isOpen, onClose, product, onSuccess, categories }: ProductFormProps) {
   const [formData, setFormData] = useState<Product>({
     name: '',
     slug: '',
@@ -40,7 +39,6 @@ export default function ProductForm({ isOpen, onClose, product, onSuccess, categ
     categoryId: '',
     totalStock: 1,
     isActive: true,
-    isBundle: forceBundle || false,
   })
   const [loading, setLoading] = useState(false)
   const [uploading, setUploading] = useState(false)
@@ -61,7 +59,6 @@ export default function ProductForm({ isOpen, onClose, product, onSuccess, categ
         categoryId: categories[0]?.id || '',
         totalStock: 1,
         isActive: true,
-        isBundle: forceBundle || false,
       })
       setImagePreview(null)
     }
@@ -295,24 +292,13 @@ export default function ProductForm({ isOpen, onClose, product, onSuccess, categ
               <span>Active Product</span>
             </label>
 
-            {!forceBundle && (
-              <label className="flex items-center gap-2 cursor-pointer">
-                <input
-                  type="checkbox"
-                  checked={formData.isBundle}
-                  onChange={(e) => setFormData({ ...formData, isBundle: e.target.checked })}
-                  className="rounded"
-                  disabled={forceBundle}
-                />
-                <span>This is a Bundle</span>
-              </label>
-            )}
-            {forceBundle && (
-              <div className="px-3 py-2 bg-blue-100 text-blue-800 rounded text-sm">
-                🎁 This will be created as a bundle
-              </div>
-            )}
           </div>
+
+          {/* Bundle Selection - Only show when editing existing product */}
+          {product?.id && (
+            <BundleSelector productId={product.id} />
+          )}
+        </div>
 
           <div className="flex justify-end gap-4 pt-4 border-t">
             <button

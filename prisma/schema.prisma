@@ -34,6 +34,17 @@ model Category {
   products    Product[]
 }
 
+model Bundle {
+  id          String          @id @default(cuid())
+  name        String          @unique
+  slug        String          @unique
+  description String?
+  isActive    Boolean         @default(true)
+  createdAt   DateTime        @default(now())
+  updatedAt   DateTime        @updatedAt
+  products    ProductBundle[]
+}
+
 model Product {
   id             String          @id @default(cuid())
   name           String
@@ -43,28 +54,26 @@ model Product {
   image          String?
   categoryId     String
   totalStock     Int             @default(1)
-  isBundle       Boolean         @default(false)
   isActive       Boolean         @default(true)
   createdAt      DateTime        @default(now())
   updatedAt      DateTime        @updatedAt
   orderItems     OrderItem[]
   category       Category        @relation(fields: [categoryId], references: [id], onDelete: Cascade)
-  bundleProducts ProductBundle[] @relation("BundleProduct")
-  parentBundles  ProductBundle[] @relation("ParentBundle")
+  bundles        ProductBundle[]
   stockBlocks    StockBlock[]
 }
 
 model ProductBundle {
-  id                String   @id @default(cuid())
-  bundleProductId   String
-  includedProductId String
-  quantity          Int      @default(1)
-  createdAt         DateTime @default(now())
-  updatedAt         DateTime @updatedAt
-  includedProduct   Product  @relation("BundleProduct", fields: [includedProductId], references: [id], onDelete: Cascade)
-  bundleProduct     Product  @relation("ParentBundle", fields: [bundleProductId], references: [id], onDelete: Cascade)
+  id        String   @id @default(cuid())
+  bundleId  String
+  productId String
+  quantity  Int      @default(1)
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+  bundle    Bundle   @relation(fields: [bundleId], references: [id], onDelete: Cascade)
+  product   Product  @relation(fields: [productId], references: [id], onDelete: Cascade)
 
-  @@unique([bundleProductId, includedProductId])
+  @@unique([bundleId, productId])
 }
 
 model StockBlock {

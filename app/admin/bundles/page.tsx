@@ -2,55 +2,34 @@
 
 import { useEffect, useState } from 'react'
 import { useRouter } from 'next/navigation'
-import { Plus, Edit, Trash2, Package, X } from 'lucide-react'
+import { Plus, Edit, Trash2, Package } from 'lucide-react'
 import AdminNav from '@/components/AdminNav'
-import { formatCurrency } from '@/lib/utils'
-import ProductForm from '@/components/ProductForm'
+import BundleForm from '@/components/BundleForm'
 
 interface Bundle {
   id: string
   name: string
   slug: string
-  description: string
-  price: number
-  image: string | null
+  description?: string
   isActive: boolean
-  category: { name: string; id: string }
-  bundleProducts: Array<{
+  createdAt: string
+  products: Array<{
     id: string
     quantity: number
-    includedProduct: {
+    product: {
       id: string
       name: string
-      slug: string
-      price: number
       image: string | null
-      category: { name: string }
     }
   }>
-}
-
-interface Product {
-  id: string
-  name: string
-  slug: string
-  price: number
-  image: string | null
-  category: { name: string }
-  isBundle: boolean
 }
 
 export default function AdminBundlesPage() {
   const router = useRouter()
   const [bundles, setBundles] = useState<Bundle[]>([])
-  const [allProducts, setAllProducts] = useState<Product[]>([])
-  const [categories, setCategories] = useState<Array<{ id: string; name: string }>>([])
   const [loading, setLoading] = useState(true)
   const [showBundleForm, setShowBundleForm] = useState(false)
   const [selectedBundle, setSelectedBundle] = useState<Bundle | undefined>()
-  const [editingBundle, setEditingBundle] = useState<Bundle | undefined>()
-  const [showProductSelector, setShowProductSelector] = useState(false)
-  const [selectedProducts, setSelectedProducts] = useState<Array<{ productId: string; quantity: number }>>([])
 
   useEffect(() => {
     const session = localStorage.getItem('admin_session')
@@ -58,163 +37,56 @@ export default function AdminBundlesPage() {
       router.push('/admin/login')
       return
     }
-    fetchData()
+    fetchBundles()
   }, [])
 
-  async function fetchData() {
+  async function fetchBundles() {
     try {
-      const [bundlesRes, productsRes, categoriesRes] = await Promise.all([
-        fetch('/api/bundles'),
-        fetch('/api/products?all=true'),
-        fetch('/api/categories'),
-      ])
-      
-      const bundlesData = await bundlesRes.json()
-      const productsData = await productsRes.json()
-      const categoriesData = await categoriesRes.json()
-      
-      // Filter out bundles from products list (products only)
-      const nonBundleProducts = productsData.filter((p: Product) => !p.isBundle)
-      
-      setBundles(bundlesData)
-      setAllProducts(nonBundleProducts)
-      // Store categories for the form
-      if (categoriesData && categoriesData.length > 0) {
-        setCategories(categoriesData.map((c: { id: string; name: string }) => ({
-          id: c.id,
-          name: c.name,
-        })))
-      }
+      const response = await fetch('/api/bundles')
+      const data = await response.json()
+      setBundles(data)
     } catch (error) {
-      console.error('Error fetching data:', error)
+      console.error('Error fetching bundles:', error)
     } finally {
       setLoading(false)
     }
   }
 
+  function handleNewBundle() {
+    setSelectedBundle(undefined)
+    setShowBundleForm(true)
+  }
+
+  function handleEditBundle(bundle: Bundle) {
+    setSelectedBundle(bundle)
+    setShowBundleForm(true)
+  }
+
   async function handleDeleteBundle(bundleId: string) {
-    if (!confirm('Are you sure you want to delete this bundle?')) return
+    if (!confirm('Are you sure you want to delete this bundle? This will remove all product assignments.')) return
 
     try {
-      const response = await fetch(`/api/products/${bundleId}`, {
+      const response = await fetch(`/api/bundles/${bundleId}`, {
         method: 'DELETE',
       })
 
-      if (!response.ok) {
-        throw new Error('Failed to delete bundle')
+      if (response.ok) {
+        fetchBundles()
+      } else {
+        alert('Failed to delete bundle')
       }
-
-      fetchData()
     } catch (error) {
       console.error('Error deleting bundle:', error)
       alert('Failed to delete bundle')
     }
   }
 
-  function handleEditBundle(bundle: Bundle) {
-    setSelectedBundle(bundle)
-    setEditingBundle(bundle)
-    setShowBundleForm(true)
-    
-    // Pre-populate selected products
-    const products = bundle.bundleProducts.map(bp => ({
-      productId: bp.includedProduct.id,
-      quantity: bp.quantity,
-    }))
-    setSelectedProducts(products)
-  }
-
-  function handleNewBundle() {
-    setSelectedBundle(undefined)
-    setEditingBundle(undefined)
-    setSelectedProducts([])
-    setShowBundleForm(true)
-  }
-
-  async function handleBundleFormSuccess(product: Product) {
-    // If this is a new bundle, open product selector
-    // If editing, save the bundle products if they were selected
-    if (selectedProducts.length > 0) {
-      await saveBundleProducts(product.id, selectedProducts)
-    }
-    
+  function handleBundleFormSuccess() {
     setShowBundleForm(false)
     setSelectedBundle(undefined)
-    setEditingBundle(undefined)
-    setSelectedProducts([])
-    
-    // Wait a bit for API to finish
     setTimeout(() => {
-      fetchData()
+      fetchBundles()
     }, 100)
-  }
-
-  async function saveBundleProducts(bundleId: string, products: Array<{ productId: string; quantity: number }>) {
-    try {
-      const response = await fetch(`/api/bundles/${bundleId}/products`, {
-        method: 'PUT',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify({ productIds: products }),
-      })
-
-      if (!response.ok) {
-        throw new Error('Failed to save bundle products')
-      }
-
-      return await response.json()
-    } catch (error) {
-      console.error('Error saving bundle products:', error)
-      throw error
-    }
-  }
-
-  async function handleManageProducts(bundle: Bundle) {
-    setEditingBundle(bundle)
-    setSelectedProducts(
-      bundle.bundleProducts.map(bp => ({
-        productId: bp.includedProduct.id,
-        quantity: bp.quantity,
-      }))
-    )
-    setShowProductSelector(true)
-  }
-
-  async function handleSaveBundleProducts() {
-    if (!editingBundle) return
-
-    try {
-      await saveBundleProducts(editingBundle.id, selectedProducts)
-      setShowProductSelector(false)
-      setEditingBundle(undefined)
-      setSelectedProducts([])
-      fetchData()
-    } catch (error) {
-      alert('Failed to save bundle products')
-    }
-  }
-
-  function handleAddProduct() {
-    // Add first available product that's not already in the bundle
-    const existingIds = selectedProducts.map(p => p.productId)
-    const available = allProducts.find(p => !existingIds.includes(p.id))
-    
-    if (available) {
-      setSelectedProducts([...selectedProducts, { productId: available.id, quantity: 1 }])
-    }
-  }
-
-  function handleRemoveProduct(productId: string) {
-    setSelectedProducts(selectedProducts.filter(p => p.productId !== productId))
-  }
-
-  function handleUpdateQuantity(productId: string, quantity: number) {
-    setSelectedProducts(
-      selectedProducts.map(p =>
-        p.productId === productId ? { ...p, quantity: Math.max(1, quantity) } : p
-      )
-    )
   }
 
   if (loading) {
@@ -225,7 +97,6 @@ export default function AdminBundlesPage() {
     )
   }
 
-
   return (
     <div className="min-h-screen bg-gray-50">
       <AdminNav />
@@ -234,7 +105,9 @@ export default function AdminBundlesPage() {
         <div className="flex justify-between items-center mb-8">
           <div>
             <h1 className="text-3xl font-bold text-gray-900">Bundle Management</h1>
-            <p className="text-gray-600 mt-2">Create and manage product bundles</p>
+            <p className="text-gray-600 mt-2">
+              Create bundles (like categories). Assign products to bundles from the Products page.
+            </p>
           </div>
           <button
             onClick={handleNewBundle}
@@ -249,12 +122,15 @@ export default function AdminBundlesPage() {
           <div className="card text-center py-12">
             <Package className="mx-auto mb-4 text-gray-400" size={48} />
             <p className="text-gray-600 text-lg mb-4">No bundles created yet</p>
+            <p className="text-gray-500 text-sm mb-4">
+              Bundles are like categories - they group products together. Create a bundle, then assign products to it from the Products page.
+            </p>
             <button onClick={handleNewBundle} className="btn btn-primary">
               Create Your First Bundle
             </button>
           </div>
         ) : (
-          <div className="space-y-6">
+          <div className="space-y-4">
             {bundles.map(bundle => (
               <div key={bundle.id} className="card">
                 <div className="flex items-start justify-between">
@@ -270,36 +146,37 @@ export default function AdminBundlesPage() {
                         </span>
                       )}
                     </div>
-                    <p className="text-gray-600 mb-4">{bundle.description}</p>
-                    <div className="text-2xl font-bold text-primary-600 mb-4">
-                      {formatCurrency(bundle.price)} / week
-                    </div>
-
-                    {bundle.bundleProducts.length > 0 ? (
-                      <div className="mb-4">
-                        <p className="text-sm font-semibold text-gray-700 mb-2">Includes:</p>
-                        <ul className="space-y-1">
-                          {bundle.bundleProducts.map(bp => (
-                            <li key={bp.id} className="text-sm text-gray-600 flex items-center gap-2">
-                              <span className="font-medium">{bp.quantity}x</span>
-                              <span>{bp.includedProduct.name}</span>
-                            </li>
+                    {bundle.description && (
+                      <p className="text-gray-600 mb-3">{bundle.description}</p>
+                    )}
+                    
+                    {bundle.products.length > 0 ? (
+                      <div className="mb-3">
+                        <p className="text-sm font-semibold text-gray-700 mb-2">
+                          Contains {bundle.products.length} product{bundle.products.length !== 1 ? 's' : ''}:
+                        </p>
+                        <div className="flex flex-wrap gap-2">
+                          {bundle.products.map(pb => (
+                            <span
+                              key={pb.id}
+                              className="px-3 py-1 bg-gray-100 rounded-full text-sm text-gray-700"
+                            >
+                              {pb.quantity}x {pb.product.name}
+                            </span>
                           ))}
-                        </ul>
+                        </div>
+                        <p className="text-xs text-gray-500 mt-2">
+                          To add/remove products, go to Products page and edit the product
+                        </p>
                       </div>
                     ) : (
-                      <p className="text-sm text-gray-500 italic">No products assigned yet</p>
+                      <p className="text-sm text-gray-500 italic">
+                        No products assigned yet. Edit a product to add it to this bundle.
+                      </p>
                     )}
                   </div>
 
                   <div className="flex gap-2 ml-4">
-                    <button
-                      onClick={() => handleManageProducts(bundle)}
-                      className="btn btn-secondary text-sm"
-                    >
-                      <Edit size={16} className="mr-1" />
-                      Manage Products
-                    </button>
                     <button
                       onClick={() => handleEditBundle(bundle)}
                       className="btn btn-secondary text-sm"
@@ -323,163 +200,17 @@ export default function AdminBundlesPage() {
 
         {/* Bundle Form Modal */}
         {showBundleForm && (
-          <ProductForm
+          <BundleForm
             isOpen={showBundleForm}
             onClose={() => {
               setShowBundleForm(false)
               setSelectedBundle(undefined)
-              setEditingBundle(undefined)
-              setSelectedProducts([])
             }}
-            product={selectedBundle ? {
-              ...selectedBundle,
-              isBundle: true,
-            } : undefined}
+            bundle={selectedBundle}
             onSuccess={handleBundleFormSuccess}
-            categories={categories.length > 0 ? categories : []}
-            isBundle={true}
           />
-        )}
-
-        {/* Product Selector Modal */}
-        {showProductSelector && editingBundle && (
-          <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
-            <div className="bg-white rounded-lg max-w-4xl w-full max-h-[90vh] overflow-y-auto">
-              <div className="p-6 border-b flex justify-between items-center">
-                <h2 className="text-2xl font-bold">Manage Products in "{editingBundle.name}"</h2>
-                <button
-                  onClick={() => {
-                    setShowProductSelector(false)
-                    setEditingBundle(undefined)
-                    setSelectedProducts([])
-                  }}
-                  className="text-gray-500 hover:text-gray-700"
-                >
-                  <X size={24} />
-                </button>
-              </div>
-
-              <div className="p-6">
-                <div className="mb-4">
-                  <button
-                    onClick={handleAddProduct}
-                    className="btn btn-primary"
-                    disabled={selectedProducts.length >= allProducts.length}
-                  >
-                    <Plus size={16} className="mr-2" />
-                    Add Product
-                  </button>
-                </div>
-
-                {selectedProducts.length === 0 ? (
-                  <p className="text-gray-500 text-center py-8">No products added yet</p>
-                ) : (
-                  <div className="space-y-3">
-                    {selectedProducts.map((sp, index) => {
-                      const product = allProducts.find(p => p.id === sp.productId)
-                      if (!product) return null
-
-                      return (
-                        <div key={sp.productId} className="border rounded-lg p-4 flex items-center justify-between">
-                          <div className="flex items-center gap-4 flex-1">
-                            {product.image && (
-                              <img
-                                src={product.image}
-                                alt={product.name}
-                                className="w-16 h-16 object-cover rounded"
-                                onError={(e) => {
-                                  (e.target as HTMLImageElement).style.display = 'none'
-                                }}
-                              />
-                            )}
-                            <div className="flex-1">
-                              <p className="font-semibold">{product.name}</p>
-                              <p className="text-sm text-gray-600">{product.category.name}</p>
-                              <p className="text-sm text-primary-600">{formatCurrency(product.price)}</p>
-                            </div>
-                          </div>
-                          <div className="flex items-center gap-4">
-                            <div className="flex items-center gap-2">
-                              <label className="text-sm">Quantity:</label>
-                              <input
-                                type="number"
-                                min="1"
-                                value={sp.quantity}
-                                onChange={(e) =>
-                                  handleUpdateQuantity(sp.productId, parseInt(e.target.value) || 1)
-                                }
-                                className="w-20 px-2 py-1 border rounded"
-                              />
-                            </div>
-                            <button
-                              onClick={() => handleRemoveProduct(sp.productId)}
-                              className="text-red-600 hover:text-red-800"
-                            >
-                              <X size={20} />
-                            </button>
-                          </div>
-                        </div>
-                      )
-                    })}
-                  </div>
-                )}
-
-                {selectedProducts.length < allProducts.length && (
-                  <div className="mt-6">
-                    <p className="text-sm font-semibold mb-2">Available Products:</p>
-                    <div className="border rounded-lg max-h-60 overflow-y-auto">
-                      {allProducts
-                        .filter(p => !selectedProducts.find(sp => sp.productId === p.id))
-                        .map(product => (
-                          <button
-                            key={product.id}
-                            onClick={() =>
-                              setSelectedProducts([...selectedProducts, { productId: product.id, quantity: 1 }])
-                            }
-                            className="w-full text-left p-3 hover:bg-gray-50 border-b last:border-b-0 flex items-center gap-3"
-                          >
-                            {product.image && (
-                              <img
-                                src={product.image}
-                                alt={product.name}
-                                className="w-12 h-12 object-cover rounded"
-                                onError={(e) => {
-                                  (e.target as HTMLImageElement).style.display = 'none'
-                                }}
-                              />
-                            )}
-                            <div className="flex-1">
-                              <p className="font-medium">{product.name}</p>
-                              <p className="text-xs text-gray-600">{product.category.name}</p>
-                            </div>
-                            <span className="text-sm text-primary-600">{formatCurrency(product.price)}</span>
-                          </button>
-                        ))}
-                    </div>
-                  </div>
-                )}
-              </div>
-
-              <div className="p-6 border-t flex justify-end gap-3">
-                <button
-                  onClick={() => {
-                    setShowProductSelector(false)
-                    setEditingBundle(undefined)
-                    setSelectedProducts([])
-                  }}
-                  className="btn btn-secondary"
-                >
-                  Cancel
-                </button>
-                <button onClick={handleSaveBundleProducts} className="btn btn-primary">
-                  Save Products
-                </button>
-              </div>
-            </div>
-          </div>
         )}
       </div>
     </div>
   )
 }
-

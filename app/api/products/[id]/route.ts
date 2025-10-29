@@ -39,7 +39,7 @@ export async function PUT(
 ) {
   try {
     const body = await request.json()
-    const { name, slug, description, price, image, categoryId, totalStock, isActive, isBundle } = body
+    const { name, slug, description, price, image, categoryId, totalStock, isActive } = body
 
     // Build update data, only include image if provided
     const updateData: any = {
@@ -50,7 +50,6 @@ export async function PUT(
       categoryId,
       totalStock: parseInt(totalStock),
       isActive,
-      isBundle,
     }
 
     // Only update image if a new one is provided
