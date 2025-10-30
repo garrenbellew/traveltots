@@ -8,8 +8,8 @@
 
 1. [Getting Started - Logging In](#getting-started)
 2. [Understanding the Admin Dashboard](#admin-dashboard)
-3. [Managing Products](#managing-products)
-4. [Managing Categories](#managing-categories)
+3. [Managing Categories](#managing-categories) ⭐ **Start Here - Create Categories First!**
+4. [Managing Products](#managing-products)
 5. [Managing Bundles](#managing-bundles)
 6. [Managing Orders](#managing-orders)
 7. [Viewing the Calendar](#calendar-view)
@@ -60,9 +60,63 @@ At the top of the page, you'll see several menu items. Here's what each one does
 
 ---
 
+## Managing Categories {#managing-categories}
+
+**⚠️ IMPORTANT: You MUST create categories BEFORE creating products!** Products need a category to be assigned to.
+
+Categories help organize your products (Car Seats, Travel Cots, Strollers, etc.).
+
+### Adding a Category
+
+1. Click **Products** in the top menu
+2. Click the **Categories** tab at the top (you'll see two tabs: "Products" and "Categories")
+3. Click **New Category** button
+4. Fill in the form:
+   - **Category Name*** - What customers will see (e.g., "Car Seats")
+   - **Slug*** - URL-friendly version (e.g., "car-seats"). This is usually the same as the name, but lower-case with dashes instead of spaces
+   - **Description** - Optional description of what products go in this category
+5. Click **Create Category**
+
+**Example Categories:**
+- Car Seats (slug: car-seats)
+- Travel Cots (slug: travel-cots)
+- Strollers (slug: strollers)
+- High Chairs (slug: high-chairs)
+- Baby Gates (slug: baby-gates)
+- Accessories (slug: accessories)
+
+**Tip:** Create all your main categories first, then you can add products to them!
+
+### Editing a Category
+
+1. Go to **Products** → **Categories** tab
+2. Find the category you want to edit
+3. Click the **Edit** button (pencil icon)
+4. Make your changes
+5. Click **Update Category**
+
+### Deleting a Category
+
+**⚠️ WARNING: Deleting a category will also DELETE all products in that category!**
+
+**Before deleting a category:**
+1. Move all products to a different category first, OR
+2. Delete all products in that category if you're sure
+
+**To delete:**
+1. Go to **Products** → **Categories** tab
+2. Find the category
+3. Click **Delete**
+4. Confirm the deletion
+
+---
+
 ## Managing Products {#managing-products}
 
 Products are the items customers can rent (car seats, strollers, etc.).
+
+**⚠️ Make sure you have created categories FIRST!** You cannot create a product without selecting a category.
+一次只能编辑一个待办事项
 
 ### Adding a New Product
 
@@ -115,25 +169,6 @@ Customers won't see it, but it stays in your system.
 
 ---
 
-## Managing Categories {#managing-categories}
-
-Categories help organize products (Car Seats, Travel Cots, etc.).
-
-### Adding a Category
-
-1. Go to **Products** menu
-2. Click the **Categories** tab at the top
-3. Click **New Category**
-4. Fill in:
-   - **Category Name*** - e.g., "Car Seats"
-   - **Slug*** - e.g., "car-seats"
-   - **Description** - Optional description
-5. Click **Create Category**
-
-### Editing or Deleting a Category
-
-- **Edit:** Click the Edit button, make changes, save
-- **Delete:** Click Delete - but **warning:** This will delete all products in this category! Make sure all products are moved first.
 
 ---
 
@@ -156,13 +191,17 @@ Bundles are packages that include multiple products at a discounted price.
 
 **Step 2: Add Products to the Bundle**
 
+**Important:** You need to have products already created before you can add them to bundles!
+
 1. Go to **Products** menu
 2. Find a product that should be in your bundle
 3. Click **Edit** on that product
-4. Scroll to **"Assign to Bundles"** section
-5. Check the box next to your bundle name
-6. Set the quantity (how many of this product in the bundle)
-7. Repeat for all products you want in the bundle
+4. Scroll down to find the **"Assign to Bundles"** section (only appears when editing an existing product)
+5. You'll see a list of all active bundles with checkboxes
+6. Check the box next to your bundle name
+7. If needed, adjust the quantity (how many of this product in the bundle)
+8. The changes save automatically when you check/uncheck boxes
+9. Repeat for all products you want in the bundle
 
 **Example:** If your "Baby Essentials Bundle" should have:
 - 1x Car Seat
@@ -170,9 +209,11 @@ Bundles are packages that include multiple products at a discounted price.
 - 1x High Chair
 
 You would:
-1. Edit Car Seat → Check "Baby Essentials Bundle" → Quantity: 1
-2. Edit Travel Cot → Check "Baby Essentials Bundle" → Quantity: 1
-3. Edit High Chair → Check "Baby Essentials Bundle" → Quantity: 1
+1. Edit Car Seat → Scroll to "Assign to Bundles" → Check "Baby Essentials Bundle" → Set Quantity: 1
+2. Edit Travel Cot → Scroll to "Assign to Bundles" → Check "Baby Essentials Bundle" → Set Quantity: 1
+3. Edit High Chair → Scroll to "Assign to Bundles" → Check "Baby Essentials Bundle" → Set Quantity: 1
+
+**Tip:** You can assign the same product to multiple bundles if needed!
 
 ### Editing or Deleting Bundles
 
@@ -424,6 +465,13 @@ Settings control important aspects of your business.
 - Clear your browser cache and try again
 - Contact your website administrator if still stuck
 
+### "I Can't Create a Product - No Categories Available"
+
+- **You need to create categories first!**
+- Go to Products → Categories tab
+- Create at least one category
+- Then go back to Products tab to add your product
+
 ### "Product Images Won't Upload"
 
 - Make sure image is less than 5MB
@@ -450,9 +498,10 @@ Settings control important aspects of your business.
 
 ### "I Deleted Something by Mistake"
 
-- **Categories:** Products in deleted categories are also deleted (be careful!)
-- **Products:** Check if product is just inactive (uncheck "Active Product")
+- **Categories:** ⚠️ Products in deleted categories are also deleted (be very careful!)
+- **Products:** Check if product is just inactive (uncheck "Active Product") - inactive products can be reactivated
 - **Orders:** Cancelled orders stay in the system but don't affect stock
+- **Bundles:** Deleting a bundle doesn't delete the products, it just removes the grouping
 
 ### "WhatsApp Messages Aren't Sending"
 
@@ -489,12 +538,14 @@ Settings control important aspects of your business.
 2. Update **Stock Numbers** if you've purchased new items
 3. Check customer **Messages** and respond
 4. Review and update **Testimonials**
+5. Consider adding new **Categories** or **Products** for seasonal items
 
 ### Monthly Tasks
 
 1. Review **Settings** - Update pricing if needed
-2. Add new **Products** or **Bundles** for seasonal items
-3. Update **Website Pages** if information changes
+2. Review your **Categories** - Do you need new ones or should any be removed?
+3. Add new **Products** or **Bundles** for seasonal items
+4. Update **Website Pages** if information changes
 
 ---
 
@@ -510,11 +561,13 @@ If you're stuck:
 
 ## Important Reminders
 
+✅ **Always** create categories BEFORE creating products  
 ✅ **Always** confirm orders before marking them as delivered  
 ✅ **Always** update stock numbers when you buy new items  
 ✅ **Always** save your changes before leaving a page  
-✅ **Never** delete categories with products in them  
+✅ **Never** delete categories with products in them (delete products first!)  
 ✅ **Remember** to mark orders as completed after collection  
+✅ **Remember** to assign products to bundles from the product edit page  
 
 ---
 
