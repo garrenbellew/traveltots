@@ -116,7 +116,6 @@ Categories help organize your products (Car Seats, Travel Cots, Strollers, etc.)
 Products are the items customers can rent (car seats, strollers, etc.).
 
 **⚠️ Make sure you have created categories FIRST!** You cannot create a product without selecting a category.
-一次只能编辑一个待办事项
 
 ### Adding a New Product
 
