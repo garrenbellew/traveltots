@@ -68,7 +68,8 @@ export async function GET(request: NextRequest) {
     
     try {
       // Launch browser with timeout and better error handling
-      const launchPromise = puppeteer.launch({
+      // Try to use installed Chromium first, fallback to system Chrome
+      const launchOptions: any = {
         args: [
           '--no-sandbox',
           '--disable-setuid-sandbox',
@@ -79,9 +80,32 @@ export async function GET(request: NextRequest) {
           '--single-process',
           '--disable-gpu',
           '--disable-software-rasterizer',
+          '--disable-extensions',
+          '--disable-background-networking',
+          '--disable-background-timer-throttling',
+          '--disable-renderer-backgrounding',
+          '--disable-backgrounding-occluded-windows',
         ],
         timeout: 30000, // 30 second timeout
-      });
+      };
+
+      // Try to use installed Chromium if available
+      try {
+        const puppeteerCore = require('puppeteer-core');
+        const { executablePath } = puppeteerCore;
+        if (executablePath && typeof executablePath === 'function') {
+          const chromePath = executablePath();
+          if (chromePath) {
+            launchOptions.executablePath = chromePath;
+            console.log('Using Puppeteer-installed Chromium:', chromePath);
+          }
+        }
+      } catch (e) {
+        // Fallback to system Chrome or default
+        console.log('Using default Chrome/Chromium path');
+      }
+
+      const launchPromise = puppeteer.launch(launchOptions);
 
       // Add timeout wrapper
       browser = await Promise.race([

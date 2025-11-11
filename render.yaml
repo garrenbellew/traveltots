@@ -12,6 +12,8 @@ services:
       echo "DATABASE_URL is set: $([ -n "$DATABASE_URL" ] && echo 'YES' || echo 'NO')"
       echo "DATABASE_URL starts with: $(echo $DATABASE_URL | cut -c1-30)"
       npm install
+      echo "=== Installing Chromium for Puppeteer ==="
+      npx puppeteer browsers install chrome || echo "Chromium install failed, will try to use system Chrome"
       echo "=== STEP 1: Check original schema ==="
       head -8 prisma/schema.prisma | grep -E "provider|datasource"
       echo "=== STEP 2: Copy PostgreSQL schema ==="
