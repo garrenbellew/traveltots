@@ -64,42 +64,64 @@ export async function GET(request: NextRequest) {
 
     console.log('Generating PDF with Puppeteer...');
     
-    // Launch browser and generate PDF
-    const browser = await puppeteer.launch({
-      args: [
-        '--no-sandbox',
-        '--disable-setuid-sandbox',
-        '--disable-dev-shm-usage',
-        '--disable-accelerated-2d-canvas',
-        '--no-first-run',
-        '--no-zygote',
-        '--single-process',
-      ],
-    });
-
+    let browser: any = null;
+    
     try {
-      const page = await browser.newPage();
-      await page.setContent(fullHtml, { waitUntil: 'networkidle0' });
-      
-      const pdfBuffer = await page.pdf({
-        format: 'A4',
-        margin: {
-          top: '20mm',
-          right: '15mm',
-          bottom: '20mm',
-          left: '15mm',
-        },
-        printBackground: true,
+      // Launch browser with timeout and better error handling
+      const launchPromise = puppeteer.launch({
+        args: [
+          '--no-sandbox',
+          '--disable-setuid-sandbox',
+          '--disable-dev-shm-usage',
+          '--disable-accelerated-2d-canvas',
+          '--no-first-run',
+          '--no-zygote',
+          '--single-process',
+          '--disable-gpu',
+          '--disable-software-rasterizer',
+        ],
+        timeout: 30000, // 30 second timeout
       });
 
-      await browser.close();
+      // Add timeout wrapper
+      browser = await Promise.race([
+        launchPromise,
+        new Promise((_, reject) => 
+          setTimeout(() => reject(new Error('Puppeteer launch timeout')), 30000)
+        )
+      ]) as any;
+
+      const page = await browser.newPage();
+      
+      // Set content with timeout
+      await Promise.race([
+        page.setContent(fullHtml, { waitUntil: 'networkidle0', timeout: 30000 }),
+        new Promise((_, reject) => 
+          setTimeout(() => reject(new Error('Page content load timeout')), 30000)
+        )
+      ]);
+      
+      // Generate PDF with timeout
+      const pdfBuffer = await Promise.race([
+        page.pdf({
+          format: 'A4',
+          margin: {
+            top: '20mm',
+            right: '15mm',
+            bottom: '20mm',
+            left: '15mm',
+          },
+          printBackground: true,
+          timeout: 30000,
+        }),
+        new Promise((_, reject) => 
+          setTimeout(() => reject(new Error('PDF generation timeout')), 30000)
+        )
+      ]) as Buffer;
 
       if (!pdfBuffer || pdfBuffer.length === 0) {
         console.error('PDF generation returned empty buffer');
-        return NextResponse.json(
-          { error: 'Failed to generate PDF - empty buffer' },
-          { status: 500 }
-        );
+        throw new Error('PDF buffer is empty');
       }
 
       console.log('PDF generated successfully, size:', pdfBuffer.length, 'bytes');
@@ -117,14 +139,47 @@ export async function GET(request: NextRequest) {
         },
       });
     } catch (puppeteerError) {
-      await browser.close();
+      console.error('Puppeteer error:', puppeteerError);
+      if (browser) {
+        try {
+          await browser.close();
+        } catch (closeError) {
+          console.error('Error closing browser:', closeError);
+        }
+      }
       throw puppeteerError;
     }
   } catch (error) {
     console.error('Error generating PDF:', error);
     const errorMessage = error instanceof Error ? error.message : 'Unknown error';
     const errorStack = error instanceof Error ? error.stack : undefined;
-    console.error('Error details:', { errorMessage, errorStack });
+    console.error('Error details:', { 
+      errorMessage, 
+      errorStack,
+      errorName: error instanceof Error ? error.name : undefined,
+    });
+    
+    // Check for specific Puppeteer errors
+    if (errorMessage.includes('timeout') || errorMessage.includes('Timeout')) {
+      return NextResponse.json(
+        { 
+          error: 'PDF generation timed out. The server may be under heavy load. Please try again.',
+          details: errorMessage,
+        },
+        { status: 504 }
+      );
+    }
+    
+    if (errorMessage.includes('Could not find Chrome') || errorMessage.includes('executable')) {
+      return NextResponse.json(
+        { 
+          error: 'PDF generation service unavailable. Chrome/Chromium is not installed on the server.',
+          details: errorMessage,
+          hint: 'Please contact the administrator to install Chromium dependencies.'
+        },
+        { status: 503 }
+      );
+    }
     
     return NextResponse.json(
       { 
