@@ -166,6 +166,29 @@ Instead of deleting, you can hide a product:
 
 Customers won't see it, but it stays in your system.
 
+### Reordering Products
+
+You can change the order in which products appear on your website. This is useful for highlighting popular items or organizing products by priority.
+
+**To Reorder Products:**
+
+1. Go to **Products** in the top menu
+2. You'll see a table with all your products
+3. At the top, you'll see a dropdown to **Filter by Category** (optional - you can reorder all products or just within a category)
+4. In the **Order** column, you'll see up (↑) and down (↓) arrow buttons for each product
+5. Click the **↑** button to move a product up in the list
+6. Click the **↓** button to move a product down in the list
+7. The order updates immediately and will be reflected on your public website
+
+**Tips:**
+- Products at the top of the list appear first on your website
+- You can filter by category to reorder products within a specific category
+- The first product in the list has the up arrow disabled (can't go higher)
+- The last product has the down arrow disabled (can't go lower)
+- The new order is saved automatically - no need to click a "Save" button
+
+**Example:** If you want your "Premium Car Seat" to appear before "Basic Car Seat", just click the up arrow on "Premium Car Seat" until it's above the basic one.
+
 ---
 
 
