@@ -55,6 +55,7 @@ model Product {
   categoryId     String
   totalStock     Int             @default(1)
   isActive       Boolean         @default(true)
+  sortOrder      Int             @default(0)
   createdAt      DateTime        @default(now())
   updatedAt      DateTime        @updatedAt
   orderItems     OrderItem[]

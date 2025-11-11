@@ -22,9 +22,10 @@ async function getProducts(categorySlug?: string) {
     include: {
       category: true,
     },
-    orderBy: {
-      createdAt: 'desc',
-    },
+    orderBy: [
+      { sortOrder: 'asc' },
+      { createdAt: 'desc' },
+    ],
   })
 }
 

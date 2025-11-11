@@ -2,7 +2,7 @@
 
 import { useEffect, useState } from 'react'
 import { useRouter } from 'next/navigation'
-import { Save, MessageCircle, DollarSign, Lock } from 'lucide-react'
+import { Save, MessageCircle, DollarSign, Lock, Download, BookOpen } from 'lucide-react'
 import AdminNav from '@/components/AdminNav'
 
 export default function AdminSettingsPage() {
@@ -197,6 +197,28 @@ export default function AdminSettingsPage() {
         <div className="mb-8">
           <h1 className="text-3xl font-bold text-gray-900">Settings</h1>
           <p className="text-gray-600 mt-2">Configure WhatsApp messages and communication settings</p>
+        </div>
+
+        {/* Training Manual Download */}
+        <div className="card mb-6">
+          <div className="flex items-center gap-3 mb-6">
+            <BookOpen className="text-primary-600" size={24} />
+            <h2 className="text-xl font-semibold text-gray-900">Admin Training Manual</h2>
+          </div>
+
+          <div className="space-y-4">
+            <p className="text-gray-600">
+              Download the complete admin training manual as a PDF. This guide covers everything you need to know about managing your Travel Tots website.
+            </p>
+            <a
+              href="/api/admin/training-manual-pdf"
+              download="Travel-Tots-Admin-Training-Manual.pdf"
+              className="btn btn-primary flex items-center gap-2 w-full sm:w-auto"
+            >
+              <Download size={18} />
+              Download Training Manual (PDF)
+            </a>
+          </div>
         </div>
 
         {/* Password Change */}

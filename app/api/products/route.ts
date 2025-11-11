@@ -26,9 +26,10 @@ export async function GET(request: NextRequest) {
       include: {
         category: true,
       },
-      orderBy: {
-        createdAt: 'desc',
-      },
+      orderBy: [
+        { sortOrder: 'asc' },
+        { createdAt: 'desc' },
+      ],
     })
 
     return NextResponse.json(products)
@@ -54,6 +55,15 @@ export async function POST(request: NextRequest) {
       )
     }
 
+    // Get the maximum sortOrder to place new product at the end
+    const maxSortOrder = await prisma.product.aggregate({
+      _max: {
+        sortOrder: true,
+      },
+    })
+
+    const newSortOrder = (maxSortOrder._max.sortOrder ?? -1) + 1
+
     const product = await prisma.product.create({
       data: {
         name,
@@ -64,6 +74,7 @@ export async function POST(request: NextRequest) {
         categoryId,
         totalStock: parseInt(totalStock) || 1,
         isActive: isActive ?? true,
+        sortOrder: newSortOrder,
       },
       include: {
         category: true,
