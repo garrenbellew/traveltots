@@ -91,10 +91,9 @@ export async function GET(request: NextRequest) {
 
       // Try to use installed Chromium if available
       try {
-        const puppeteerCore = require('puppeteer-core');
-        const { executablePath } = puppeteerCore;
-        if (executablePath && typeof executablePath === 'function') {
-          const chromePath = executablePath();
+        // Puppeteer v21+ uses executablePath() function
+        if (typeof (puppeteer as any).executablePath === 'function') {
+          const chromePath = (puppeteer as any).executablePath();
           if (chromePath) {
             launchOptions.executablePath = chromePath;
             console.log('Using Puppeteer-installed Chromium:', chromePath);
