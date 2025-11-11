@@ -2,6 +2,7 @@ import { readFile } from 'fs/promises';
 import { join } from 'path';
 import { marked } from 'marked';
 import AdminNav from '@/components/AdminNav';
+import PrintButton from '@/components/PrintButton';
 
 export const dynamic = 'force-dynamic';
 
@@ -42,12 +43,7 @@ export default async function TrainingManualPage() {
       <div className="max-w-4xl mx-auto px-4 py-8">
         <div className="mb-6 flex items-center justify-between">
           <h1 className="text-3xl font-bold text-gray-900">Admin Training Manual</h1>
-          <button
-            onClick={() => window.print()}
-            className="btn btn-primary flex items-center gap-2"
-          >
-            🖨️ Print
-          </button>
+          <PrintButton />
         </div>
 
         <div 
