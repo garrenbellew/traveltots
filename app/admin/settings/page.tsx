@@ -71,20 +71,41 @@ export default function AdminSettingsPage() {
       
       const popularCats = settingsData.popularCategories || ''
       setPopularCategories(popularCats)
-      // Split by comma, trim each value, and filter out empty strings
+      // Split by comma, trim each value, filter out empty strings, and normalize
       const slugs = popularCats 
-        ? popularCats.split(',').map((s: string) => s.trim()).filter((s: string) => s.length > 0)
+        ? popularCats
+            .split(',')
+            .map((s: string) => s.trim())
+            .filter((s: string) => s.length > 0)
+            .map((s: string) => s) // Keep original slug format for matching
         : []
       setSelectedCategorySlugs(slugs)
+      
+      // Verify slugs exist in categories list
+      const categoriesData = await categoriesRes.json()
+      setAllCategories(categoriesData || [])
+      
+      // Filter out any slugs that don't match actual categories
+      const validSlugs = slugs.filter(slug => 
+        categoriesData.some((cat: { slug: string }) => 
+          cat.slug.trim().toLowerCase() === slug.trim().toLowerCase()
+        )
+      )
+      
+      // Only update if there's a mismatch (some slugs were invalid)
+      if (validSlugs.length !== slugs.length) {
+        setSelectedCategorySlugs(validSlugs)
+        // Optionally update the database with cleaned slugs
+        if (validSlugs.length > 0) {
+          // This will be saved when user clicks Save
+        }
+      }
       
       const pricingData = await pricingRes.json()
       setWeeklyPricePercentIncrease(pricingData.weeklyPricePercentIncrease || 10)
       setMinOrderValue(pricingData.minOrderValue || 0)
       setAirportMinOrder(pricingData.airportMinOrder || 0)
       setBundleDiscountPercent(pricingData.bundleDiscountPercent || 0)
-      
-      const categoriesData = await categoriesRes.json()
-      setAllCategories(categoriesData || [])
     } catch (error) {
       console.error('Error fetching settings:', error)
       setStatusMessage('Failed to load settings. Please refresh the page.')
@@ -485,8 +506,20 @@ export default function AdminSettingsPage() {
 
         {/* Popular Categories */}
         <div className="card mb-6">
-          <div className="flex items-center gap-3 mb-6">
+          <div className="flex items-center justify-between mb-6">
             <h2 className="text-xl font-semibold text-gray-900">🌟 Popular Categories</h2>
+            {selectedCategorySlugs.length > 0 && (
+              <button
+                onClick={() => {
+                  setSelectedCategorySlugs([])
+                  setPopularCategories('')
+                }}
+                className="btn btn-secondary text-sm px-4 py-2"
+                title="Clear all selections"
+              >
+                Clear All
+              </button>
+            )}
           </div>
 
           <p className="text-sm text-gray-600 mb-6">
@@ -495,8 +528,11 @@ export default function AdminSettingsPage() {
 
           <div className="space-y-3">
             {allCategories.map(category => {
-              // Use strict comparison to ensure exact match
-              const isSelected = selectedCategorySlugs.some(slug => slug.trim() === category.slug.trim())
+              // Normalize both values for comparison (trim and lowercase)
+              const normalizedCategorySlug = category.slug.trim().toLowerCase()
+              const isSelected = selectedCategorySlugs.some(
+                slug => slug.trim().toLowerCase() === normalizedCategorySlug
+              )
               return (
                 <label key={category.id} className="flex items-center gap-3 p-3 border border-gray-300 rounded-lg cursor-pointer hover:bg-gray-50">
                   <input
@@ -505,11 +541,13 @@ export default function AdminSettingsPage() {
                     onChange={(e) => {
                       const currentSlugs = [...selectedCategorySlugs]
                       if (e.target.checked) {
-                        if (currentSlugs.length < 3 && !currentSlugs.includes(category.slug)) {
+                        if (currentSlugs.length < 3 && !isSelected) {
                           setSelectedCategorySlugs([...currentSlugs, category.slug])
                         }
                       } else {
-                        setSelectedCategorySlugs(currentSlugs.filter(s => s !== category.slug))
+                        setSelectedCategorySlugs(
+                          currentSlugs.filter(s => s.trim().toLowerCase() !== normalizedCategorySlug)
+                        )
                       }
                     }}
                     disabled={!isSelected && selectedCategorySlugs.length >= 3}
@@ -526,11 +564,22 @@ export default function AdminSettingsPage() {
               <p className="text-gray-500 text-sm">No categories available. Please add categories first.</p>
             )}
           </div>
-          {selectedCategorySlugs.length > 0 && (
-            <p className="mt-4 text-sm text-gray-600">
-              Selected: {selectedCategorySlugs.length} / 3 categories
-            </p>
-          )}
+          <div className="mt-4 flex items-center justify-between">
+            {selectedCategorySlugs.length > 0 && (
+              <p className="text-sm text-gray-600">
+                Selected: {selectedCategorySlugs.length} / 3 categories
+              </p>
+            )}
+            {selectedCategorySlugs.length === 0 && (
+              <p className="text-sm text-gray-500">No categories selected</p>
+            )}
+            {/* Debug info - can be removed later */}
+            {selectedCategorySlugs.length > 0 && process.env.NODE_ENV === 'development' && (
+              <p className="text-xs text-gray-400">
+                Slugs: {selectedCategorySlugs.join(', ')}
+              </p>
+            )}
+          </div>
         </div>
 
         {/* Status Message */}
