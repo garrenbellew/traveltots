@@ -60,7 +60,12 @@ export default function AdminSettingsPage() {
       
       const popularCats = settingsData.popularCategories || ''
       setPopularCategories(popularCats)
-      setSelectedCategorySlugs(popularCats ? popularCats.split(',').filter((s: string) => s.trim()) : [])
+      // Split by comma, trim each value, and filter out empty strings
+      const slugs = popularCats 
+        ? popularCats.split(',').map((s: string) => s.trim()).filter((s: string) => s.length > 0)
+        : []
+      setSelectedCategorySlugs(slugs)
+      console.log('Loaded popular categories:', slugs)
       
       const pricingData = await pricingRes.json()
       setWeeklyPricePercentIncrease(pricingData.weeklyPricePercentIncrease || 10)
@@ -479,19 +484,21 @@ export default function AdminSettingsPage() {
 
           <div className="space-y-3">
             {allCategories.map(category => {
-              const isSelected = selectedCategorySlugs.includes(category.slug)
+              // Use strict comparison to ensure exact match
+              const isSelected = selectedCategorySlugs.some(slug => slug.trim() === category.slug.trim())
               return (
                 <label key={category.id} className="flex items-center gap-3 p-3 border border-gray-300 rounded-lg cursor-pointer hover:bg-gray-50">
                   <input
                     type="checkbox"
                     checked={isSelected}
                     onChange={(e) => {
+                      const currentSlugs = [...selectedCategorySlugs]
                       if (e.target.checked) {
-                        if (selectedCategorySlugs.length < 3) {
-                          setSelectedCategorySlugs([...selectedCategorySlugs, category.slug])
+                        if (currentSlugs.length < 3 && !currentSlugs.includes(category.slug)) {
+                          setSelectedCategorySlugs([...currentSlugs, category.slug])
                         }
                       } else {
-                        setSelectedCategorySlugs(selectedCategorySlugs.filter(s => s !== category.slug))
+                        setSelectedCategorySlugs(currentSlugs.filter(s => s !== category.slug))
                       }
                     }}
                     disabled={!isSelected && selectedCategorySlugs.length >= 3}
