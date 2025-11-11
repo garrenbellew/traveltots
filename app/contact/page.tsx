@@ -1,4 +1,25 @@
-export default function ContactPage() {
+import { prisma } from '@/lib/prisma'
+
+export const dynamic = 'force-dynamic'
+
+async function getContactInfo() {
+  try {
+    const admin = await prisma.admin.findFirst()
+    return {
+      email: admin?.contactEmail || 'info@traveltots.es',
+      phone: admin?.contactPhone || null,
+    }
+  } catch (error) {
+    return {
+      email: 'info@traveltots.es',
+      phone: null,
+    }
+  }
+}
+
+export default async function ContactPage() {
+  const contactInfo = await getContactInfo()
+  
   return (
     <div className="max-w-4xl mx-auto px-4 py-12">
       <h1 className="text-4xl font-bold mb-8">Contact Us</h1>
@@ -13,10 +34,19 @@ export default function ContactPage() {
           <div className="space-y-4">
             <div>
               <h3 className="font-semibold mb-2">Email</h3>
-              <a href="mailto:info@traveltots.es" className="text-primary-600 hover:underline">
-                info@traveltots.es
+              <a href={`mailto:${contactInfo.email}`} className="text-primary-600 hover:underline">
+                {contactInfo.email}
               </a>
             </div>
+            
+            {contactInfo.phone && (
+              <div>
+                <h3 className="font-semibold mb-2">Phone</h3>
+                <a href={`tel:${contactInfo.phone}`} className="text-primary-600 hover:underline">
+                  {contactInfo.phone}
+                </a>
+              </div>
+            )}
             
             <div>
               <h3 className="font-semibold mb-2">Location</h3>

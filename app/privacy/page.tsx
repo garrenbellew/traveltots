@@ -1,4 +1,25 @@
-export default function PrivacyPage() {
+import { prisma } from '@/lib/prisma'
+
+export const dynamic = 'force-dynamic'
+
+async function getContactInfo() {
+  try {
+    const admin = await prisma.admin.findFirst()
+    return {
+      email: admin?.contactEmail || 'info@traveltots.es',
+      phone: admin?.contactPhone || null,
+    }
+  } catch (error) {
+    return {
+      email: 'info@traveltots.es',
+      phone: null,
+    }
+  }
+}
+
+export default async function PrivacyPage() {
+  const contactInfo = await getContactInfo()
+  
   return (
     <div className="max-w-4xl mx-auto px-4 py-16">
       <div className="bg-white rounded-3xl shadow-soft p-8 md:p-12">
@@ -110,8 +131,18 @@ export default function PrivacyPage() {
           <div className="bg-vacation-sandLight rounded-xl p-6 space-y-3">
             <p className="flex items-center gap-3 text-gray-700">
               <span className="text-2xl">📧</span>
-              <span>info@traveltots.es</span>
+              <a href={`mailto:${contactInfo.email}`} className="text-primary-600 hover:underline">
+                {contactInfo.email}
+              </a>
             </p>
+            {contactInfo.phone && (
+              <p className="flex items-center gap-3 text-gray-700">
+                <span className="text-2xl">📞</span>
+                <a href={`tel:${contactInfo.phone}`} className="text-primary-600 hover:underline">
+                  {contactInfo.phone}
+                </a>
+              </p>
+            )}
             <p className="flex items-center gap-3 text-gray-700">
               <span className="text-2xl">📍</span>
               <span>Los Alcázares, Spain</span>

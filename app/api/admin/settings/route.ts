@@ -22,6 +22,8 @@ export async function GET(request: NextRequest) {
       whatsappMessageCompleted: admin.whatsappMessageCompleted || '',
       whatsappMessageCancelled: admin.whatsappMessageCancelled || '',
       popularCategories: admin.popularCategories || '',
+      contactEmail: admin.contactEmail || '',
+      contactPhone: admin.contactPhone || '',
     })
   } catch (error) {
     console.error('Error fetching admin settings:', error)
@@ -49,6 +51,8 @@ export async function PUT(request: NextRequest) {
       whatsappMessageCompleted,
       whatsappMessageCancelled,
       popularCategories,
+      contactEmail,
+      contactPhone,
     } = body
 
     // Get the first admin (you can modify this to get the logged-in admin)
@@ -84,6 +88,14 @@ export async function PUT(request: NextRequest) {
       // Handle empty string, undefined, or null - convert to null
       const trimmed = typeof popularCategories === 'string' ? popularCategories.trim() : ''
       updateData.popularCategories = trimmed ? trimmed : null
+    }
+    if (contactEmail !== undefined) {
+      const trimmed = typeof contactEmail === 'string' ? contactEmail.trim() : ''
+      updateData.contactEmail = trimmed ? trimmed : null
+    }
+    if (contactPhone !== undefined) {
+      const trimmed = typeof contactPhone === 'string' ? contactPhone.trim() : ''
+      updateData.contactPhone = trimmed ? trimmed : null
     }
 
     console.log('Updating admin with data:', updateData)

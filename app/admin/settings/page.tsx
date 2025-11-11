@@ -33,6 +33,10 @@ export default function AdminSettingsPage() {
   const [popularCategories, setPopularCategories] = useState<string>('')
   const [allCategories, setAllCategories] = useState<Array<{id: string, name: string, slug: string}>>([])
   const [selectedCategorySlugs, setSelectedCategorySlugs] = useState<string[]>([])
+  
+  // Contact info state
+  const [contactEmail, setContactEmail] = useState<string>('')
+  const [contactPhone, setContactPhone] = useState<string>('')
 
   useEffect(() => {
     const session = localStorage.getItem('admin_session')
@@ -71,6 +75,9 @@ export default function AdminSettingsPage() {
       
       const popularCats = settingsData.popularCategories || ''
       setPopularCategories(popularCats)
+      
+      setContactEmail(settingsData.contactEmail || '')
+      setContactPhone(settingsData.contactPhone || '')
       // Split by comma, trim each value, filter out empty strings, and normalize
       const slugs = popularCats 
         ? popularCats
@@ -132,6 +139,8 @@ export default function AdminSettingsPage() {
             whatsappMessageCompleted: messageCompleted,
             whatsappMessageCancelled: messageCancelled,
             popularCategories: selectedCategorySlugs.join(','),
+            contactEmail: contactEmail.trim() || null,
+            contactPhone: contactPhone.trim() || null,
           }),
         }),
         fetch('/api/admin/pricing', {
@@ -501,6 +510,51 @@ export default function AdminSettingsPage() {
               />
             </div>
 
+          </div>
+        </div>
+
+        {/* Contact Information */}
+        <div className="card mb-6">
+          <div className="flex items-center gap-3 mb-6">
+            <h2 className="text-xl font-semibold text-gray-900">📞 Contact Information</h2>
+          </div>
+
+          <p className="text-sm text-gray-600 mb-6">
+            Set the contact email and phone number that will be displayed on your website (footer, contact page, etc.)
+          </p>
+
+          <div className="space-y-4">
+            <div>
+              <label className="block text-sm font-medium text-gray-700 mb-2">
+                Contact Email
+              </label>
+              <input
+                type="email"
+                value={contactEmail}
+                onChange={(e) => setContactEmail(e.target.value)}
+                placeholder="info@traveltots.es"
+                className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary-500 focus:border-transparent"
+              />
+              <p className="mt-1 text-xs text-gray-500">
+                This email will be displayed on the website footer and contact page
+              </p>
+            </div>
+
+            <div>
+              <label className="block text-sm font-medium text-gray-700 mb-2">
+                Contact Phone Number
+              </label>
+              <input
+                type="tel"
+                value={contactPhone}
+                onChange={(e) => setContactPhone(e.target.value)}
+                placeholder="+34 123 456 789"
+                className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary-500 focus:border-transparent"
+              />
+              <p className="mt-1 text-xs text-gray-500">
+                Include country code (e.g., +34 for Spain). This will be displayed on the website
+              </p>
+            </div>
           </div>
         </div>
 

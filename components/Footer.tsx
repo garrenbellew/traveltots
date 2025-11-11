@@ -1,6 +1,20 @@
+'use client'
+
 import Link from 'next/link'
+import { useEffect, useState } from 'react'
 
 export default function Footer() {
+  const [contactInfo, setContactInfo] = useState({ email: 'info@traveltots.es', phone: null as string | null })
+
+  useEffect(() => {
+    fetch('/api/contact')
+      .then(res => res.json())
+      .then(data => setContactInfo(data))
+      .catch(() => {
+        // Keep default on error
+      })
+  }, [])
+
   return (
     <footer className="bg-gradient-to-br from-vacation-oceanDark to-vacation-ocean text-white py-16 px-4">
       <div className="max-w-6xl mx-auto">
@@ -41,8 +55,18 @@ export default function Footer() {
               </li>
               <li className="flex items-start gap-2">
                 <span>📧</span>
-                <span>info@traveltots.es</span>
+                <a href={`mailto:${contactInfo.email}`} className="hover:text-vacation-orange transition-colors">
+                  {contactInfo.email}
+                </a>
               </li>
+              {contactInfo.phone && (
+                <li className="flex items-start gap-2">
+                  <span>📞</span>
+                  <a href={`tel:${contactInfo.phone}`} className="hover:text-vacation-orange transition-colors">
+                    {contactInfo.phone}
+                  </a>
+                </li>
+              )}
             </ul>
           </div>
         </div>

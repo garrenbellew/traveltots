@@ -22,6 +22,8 @@ model Admin {
   whatsappMessageConfirmed String?
   whatsappMessageDelivered String?
   popularCategories        String?  // Comma-separated category slugs
+  contactEmail             String?  // Public contact email
+  contactPhone             String?  // Public contact phone
 }
 
 model Category {
