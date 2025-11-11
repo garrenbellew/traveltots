@@ -45,11 +45,22 @@ export default function AdminSettingsPage() {
 
   async function fetchSettings() {
     try {
+      setLoading(true)
       const [settingsRes, pricingRes, categoriesRes] = await Promise.all([
         fetch('/api/admin/settings'),
         fetch('/api/admin/pricing'),
         fetch('/api/categories')
       ])
+      
+      if (!settingsRes.ok) {
+        throw new Error('Failed to fetch settings')
+      }
+      if (!pricingRes.ok) {
+        throw new Error('Failed to fetch pricing')
+      }
+      if (!categoriesRes.ok) {
+        throw new Error('Failed to fetch categories')
+      }
       
       const settingsData = await settingsRes.json()
       setWhatsappNumber(settingsData.whatsappNumber || '')
@@ -65,7 +76,6 @@ export default function AdminSettingsPage() {
         ? popularCats.split(',').map((s: string) => s.trim()).filter((s: string) => s.length > 0)
         : []
       setSelectedCategorySlugs(slugs)
-      console.log('Loaded popular categories:', slugs)
       
       const pricingData = await pricingRes.json()
       setWeeklyPricePercentIncrease(pricingData.weeklyPricePercentIncrease || 10)
@@ -77,6 +87,7 @@ export default function AdminSettingsPage() {
       setAllCategories(categoriesData || [])
     } catch (error) {
       console.error('Error fetching settings:', error)
+      setStatusMessage('Failed to load settings. Please refresh the page.')
     } finally {
       setLoading(false)
     }
