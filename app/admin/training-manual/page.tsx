@@ -55,7 +55,8 @@ export default async function TrainingManualPage() {
         />
       </div>
 
-      <style jsx global>{`
+      <style dangerouslySetInnerHTML={{
+        __html: `
         .prose {
           color: #374151;
         }
@@ -138,7 +139,8 @@ export default async function TrainingManualPage() {
             max-width: 100%;
           }
         }
-      `}</style>
+        `
+      }} />
     </div>
   );
 }
