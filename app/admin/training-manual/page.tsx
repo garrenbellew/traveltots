@@ -70,6 +70,9 @@ export default async function TrainingManualPage() {
       
       // Map the generated ID back to the explicit ID
       headingTextToId.set(`generated:${generatedId}`, explicitId);
+      
+      // Also map the explicit ID to itself (in case TOC uses explicit ID directly)
+      headingTextToId.set(explicitId, explicitId);
     }
   }
   
@@ -110,7 +113,7 @@ export default async function TrainingManualPage() {
       .replace(/-+/g, '-') // Replace multiple dashes with single dash
       .trim();
     
-    // Try to find explicit anchor ID
+    // Try to find explicit anchor ID - check multiple strategies
     let id = null;
     
     // Strategy 1: Direct match with HTML text
@@ -129,10 +132,26 @@ export default async function TrainingManualPage() {
     else if (headingTextToId.has(`generated:${generatedId}`)) {
       id = headingTextToId.get(`generated:${generatedId}`);
     }
+    // Strategy 5: Check if the generated ID itself is an explicit anchor
+    else if (headingTextToId.has(generatedId)) {
+      id = headingTextToId.get(generatedId);
+    }
     
     // If no explicit anchor found, use generated ID (should match TOC links)
     if (!id) {
       id = generatedId;
+    }
+    
+    // Debug: log first few headings to verify
+    if (level === 2 && !globalThis._headingIdsLogged) {
+      globalThis._headingIdsLogged = true;
+      console.log('Sample heading IDs:', {
+        text: plainText.substring(0, 30),
+        normalized,
+        generatedId,
+        finalId: id,
+        hasExplicit: headingTextToId.has(normalized) || headingTextToId.has(`generated:${generatedId}`)
+      });
     }
     
     // Return heading with ID - text already contains HTML from marked

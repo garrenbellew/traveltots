@@ -36,9 +36,14 @@ export default function ManualAnchorHandler() {
               } else {
                 // Debug: show what we're looking for and what exists
                 const allIds = Array.from(document.querySelectorAll('[id]')).map(el => el.id)
+                const headingIds = Array.from(document.querySelectorAll('h1[id], h2[id], h3[id]')).map(el => ({
+                  id: el.id,
+                  text: el.textContent?.substring(0, 50) || ''
+                }))
                 console.warn('Anchor element not found:', id)
                 console.log('Looking for ID:', id)
-                console.log('Available heading IDs:', allIds.filter(id => id.includes('-') || id.length > 5))
+                console.log('All heading IDs:', headingIds)
+                console.log('Total IDs on page:', allIds.length)
               }
             }, 50)
           }
