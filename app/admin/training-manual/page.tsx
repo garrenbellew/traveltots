@@ -167,15 +167,74 @@ export default async function TrainingManualPage() {
     breaks: false,
   });
   
-  // For marked.js v17, we need to use marked.use() to extend with custom renderer
-  marked.use({ renderer });
+  // Convert markdown to HTML first
+  let htmlContent = await marked.parse(manualContent);
   
-  // Convert markdown to HTML using the configured renderer
-  const htmlContent = await marked.parse(manualContent, {
-    renderer: renderer,
-    gfm: true,
-    breaks: false,
-  });
+  // Post-process HTML to add IDs to headings
+  // Extract all headings from markdown with their anchors
+  const headingMap = new Map();
+  const headingRegex = /^(#{1,6})\s+(.+?)(?:\s+\{#([^}]+)\})?$/gm;
+  let match;
+  
+  while ((match = headingRegex.exec(manualContent)) !== null) {
+    const level = match[1].length;
+    const text = match[2].trim();
+    const explicitId = match[3];
+    
+    // Normalize text for matching
+    const normalized = text
+      .replace(/\*\*([^*]+)\*\*/g, '$1')
+      .replace(/\*([^*]+)\*/g, '$1')
+      .replace(/`([^`]+)`/g, '$1')
+      .toLowerCase()
+      .trim();
+    
+    // Generate ID
+    const generatedId = normalized
+      .replace(/[^\w\s-]/g, '')
+      .replace(/\s+/g, '-')
+      .replace(/-+/g, '-')
+      .trim();
+    
+    const finalId = explicitId || generatedId;
+    
+    // Store mapping of heading text to ID
+    headingMap.set(normalized, finalId);
+    headingMap.set(text.toLowerCase().trim(), finalId);
+  }
+  
+  // Add IDs to headings in HTML using regex
+  htmlContent = htmlContent.replace(
+    /<h([1-6])>(.*?)<\/h[1-6]>/gi,
+    (match, level, content) => {
+      // Extract text from HTML content
+      const text = content
+        .replace(/<[^>]*>/g, '') // Remove HTML tags
+        .replace(/&nbsp;/g, ' ')
+        .replace(/&amp;/g, '&')
+        .replace(/&lt;/g, '<')
+        .replace(/&gt;/g, '>')
+        .replace(/&quot;/g, '"')
+        .trim();
+      
+      const normalized = text
+        .toLowerCase()
+        .replace(/[^\w\s-]/g, '')
+        .replace(/\s+/g, '-')
+        .replace(/-+/g, '-')
+        .trim();
+      
+      // Find matching ID
+      let id = headingMap.get(normalized) || headingMap.get(text.toLowerCase().trim());
+      
+      if (!id) {
+        // Generate ID from text
+        id = normalized;
+      }
+      
+      return `<h${level} id="${id}">${content}</h${level}>`;
+    }
+  );
 
   return (
     <div className="min-h-screen bg-gray-50">
