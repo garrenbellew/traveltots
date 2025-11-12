@@ -71,18 +71,25 @@ export default async function TrainingManualPage() {
     
     // Ensure text is a string and extract plain text (remove HTML tags if any)
     let textStr = typeof text === 'string' ? text : String(text || '');
-    // Remove any HTML tags that might have been added
+    // Remove any HTML tags that might have been added by marked
     textStr = textStr.replace(/<[^>]*>/g, '').trim();
     
+    // Extract plain text from markdown-formatted text (remove **bold**, *italic*, etc.)
+    const plainText = textStr
+      .replace(/\*\*([^*]+)\*\*/g, '$1') // Remove bold
+      .replace(/\*([^*]+)\*/g, '$1') // Remove italic
+      .replace(/`([^`]+)`/g, '$1') // Remove code
+      .trim();
+    
     // Try to find matching anchor (try normalized first, then direct match)
-    const normalized = normalizeText(textStr);
+    const normalized = normalizeText(plainText);
     if (headingAnchors.has(normalized)) {
       id = headingAnchors.get(normalized);
-    } else if (headingAnchors.has(textStr.toLowerCase().trim())) {
-      id = headingAnchors.get(textStr.toLowerCase().trim());
+    } else if (headingAnchors.has(plainText.toLowerCase().trim())) {
+      id = headingAnchors.get(plainText.toLowerCase().trim());
     } else {
       // Generate ID from text (lowercase, replace spaces with dashes, remove special chars)
-      id = textStr
+      id = plainText
         .toLowerCase()
         .replace(/[^\w\s-]/g, '') // Remove special characters
         .replace(/\s+/g, '-') // Replace spaces with dashes
