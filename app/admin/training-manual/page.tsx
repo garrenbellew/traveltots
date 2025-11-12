@@ -36,23 +36,22 @@ export default async function TrainingManualPage() {
   }
 
   // First, extract all heading anchors from the markdown BEFORE processing
-  const headingAnchors = new Map();
   const headingRegex = /^(#{1,6})\s+(.+?)(?:\s+\{#([^}]+)\})?$/gm;
   let match;
   
   // Store mapping of heading text to anchor IDs
+  // We'll store multiple variations to handle different text formats from marked.js
   const headingTextToId = new Map();
   
   while ((match = headingRegex.exec(manualContent)) !== null) {
-    const fullLine = match[0]; // Full heading line with anchor
     const text = match[2].trim();
     const explicitId = match[3];
     
     if (explicitId) {
-      // Store multiple variations for matching
+      // Store the original text
       headingTextToId.set(text, explicitId);
       
-      // Normalize text (remove markdown formatting) and store
+      // Store normalized versions (remove markdown formatting)
       const normalized = text
         .replace(/\*\*([^*]+)\*\*/g, '$1')
         .replace(/\*([^*]+)\*/g, '$1')
@@ -60,6 +59,17 @@ export default async function TrainingManualPage() {
         .trim();
       headingTextToId.set(normalized, explicitId);
       headingTextToId.set(normalized.toLowerCase(), explicitId);
+      
+      // Also store the generated ID format (what TOC links use)
+      const generatedId = normalized
+        .toLowerCase()
+        .replace(/[^\w\s-]/g, '')
+        .replace(/\s+/g, '-')
+        .replace(/-+/g, '-')
+        .trim();
+      
+      // Map the generated ID back to the explicit ID
+      headingTextToId.set(`generated:${generatedId}`, explicitId);
     }
   }
   
@@ -113,12 +123,16 @@ export default async function TrainingManualPage() {
     // If no explicit anchor found, generate ID from text (this should match TOC links)
     if (!id) {
       // Generate ID the same way markdown TOC links are generated
-      id = plainText
+      const generatedId = plainText
         .toLowerCase()
         .replace(/[^\w\s-]/g, '') // Remove special characters
         .replace(/\s+/g, '-') // Replace spaces with dashes
         .replace(/-+/g, '-') // Replace multiple dashes with single dash
         .trim();
+      
+      // Check if we have an explicit ID for this generated ID
+      const explicitId = headingTextToId.get(`generated:${generatedId}`);
+      id = explicitId || generatedId;
     }
     
     // Return heading with ID - text already contains HTML from marked
