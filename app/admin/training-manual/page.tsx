@@ -3,6 +3,7 @@ import { join } from 'path';
 import { marked } from 'marked';
 import AdminNav from '@/components/AdminNav';
 import PrintButton from '@/components/PrintButton';
+import ManualAnchorHandler from '@/components/ManualAnchorHandler';
 
 export const dynamic = 'force-dynamic';
 
@@ -105,6 +106,7 @@ export default async function TrainingManualPage() {
   return (
     <div className="min-h-screen bg-gray-50">
       <AdminNav />
+      <ManualAnchorHandler />
       <div className="max-w-4xl mx-auto px-4 py-8">
         <div className="mb-6 flex items-center justify-between">
           <h1 className="text-3xl font-bold text-gray-900">Admin Training Manual</h1>
