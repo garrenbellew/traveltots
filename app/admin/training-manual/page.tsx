@@ -79,6 +79,9 @@ export default async function TrainingManualPage() {
   // Configure marked to generate heading IDs for anchor links
   const renderer = new marked.Renderer();
   
+  // Store reference to original heading method
+  const originalHeading = renderer.heading.bind(renderer);
+  
   // Override heading renderer to add IDs
   renderer.heading = function(text, level) {
     // marked.js v17 passes text as a string (may contain HTML from inline markdown)
