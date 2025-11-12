@@ -158,8 +158,8 @@ export default async function TrainingManualPage() {
     return `<h${level} id="${id}">${textStr}</h${level}>`;
   };
   
-  // Configure marked options
-  marked.setOptions({
+  // Configure marked with the custom renderer
+  marked.use({
     renderer: renderer,
     gfm: true, // GitHub Flavored Markdown
     breaks: false,
