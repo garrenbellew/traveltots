@@ -161,16 +161,21 @@ export default async function TrainingManualPage() {
     return `<h${level} id="${id}">${textStr}</h${level}>`;
   };
   
-  // Configure marked with the custom renderer
-  // For marked.js v17, we need to use marked.use() with renderer
-  marked.use({ renderer });
+  // Configure marked options
   marked.setOptions({
     gfm: true, // GitHub Flavored Markdown
     breaks: false,
   });
   
-  // Convert markdown to HTML
-  const htmlContent = await marked(manualContent);
+  // For marked.js v17, we need to use marked.use() to extend with custom renderer
+  marked.use({ renderer });
+  
+  // Convert markdown to HTML using the configured renderer
+  const htmlContent = await marked.parse(manualContent, {
+    renderer: renderer,
+    gfm: true,
+    breaks: false,
+  });
 
   return (
     <div className="min-h-screen bg-gray-50">
