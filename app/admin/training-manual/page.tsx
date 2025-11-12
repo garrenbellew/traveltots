@@ -162,8 +162,9 @@ export default async function TrainingManualPage() {
   };
   
   // Configure marked with the custom renderer
-  marked.use({
-    renderer: renderer,
+  // For marked.js v17, we need to use marked.use() with renderer
+  marked.use({ renderer });
+  marked.setOptions({
     gfm: true, // GitHub Flavored Markdown
     breaks: false,
   });
