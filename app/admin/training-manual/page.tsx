@@ -72,8 +72,17 @@ export default async function TrainingManualPage() {
     let textStr = String(text || '').trim();
     
     // Remove HTML tags to get plain text
-    const plainText = textStr
+    let plainText = textStr
       .replace(/<[^>]*>/g, '') // Remove HTML tags
+      .trim();
+    
+    // Also decode HTML entities that might be in the text
+    plainText = plainText
+      .replace(/&nbsp;/g, ' ')
+      .replace(/&amp;/g, '&')
+      .replace(/&lt;/g, '<')
+      .replace(/&gt;/g, '>')
+      .replace(/&quot;/g, '"')
       .trim();
     
     // Try multiple matching strategies
@@ -87,7 +96,7 @@ export default async function TrainingManualPage() {
     else if (headingTextToId.has(plainText)) {
       id = headingTextToId.get(plainText);
     }
-    // Strategy 3: Match with normalized lowercase
+    // Strategy 3: Match with normalized lowercase (remove markdown formatting)
     else {
       const normalized = plainText
         .replace(/\*\*([^*]+)\*\*/g, '$1')
@@ -101,8 +110,9 @@ export default async function TrainingManualPage() {
       }
     }
     
-    // If no explicit anchor found, generate ID from text
+    // If no explicit anchor found, generate ID from text (this should match TOC links)
     if (!id) {
+      // Generate ID the same way markdown TOC links are generated
       id = plainText
         .toLowerCase()
         .replace(/[^\w\s-]/g, '') // Remove special characters
