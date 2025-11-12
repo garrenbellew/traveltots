@@ -34,7 +34,11 @@ export default function ManualAnchorHandler() {
                 // Update URL without triggering scroll
                 window.history.pushState(null, '', `#${id}`)
               } else {
+                // Debug: show what we're looking for and what exists
+                const allIds = Array.from(document.querySelectorAll('[id]')).map(el => el.id)
                 console.warn('Anchor element not found:', id)
+                console.log('Looking for ID:', id)
+                console.log('Available heading IDs:', allIds.filter(id => id.includes('-') || id.length > 5))
               }
             }, 50)
           }
