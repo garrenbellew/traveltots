@@ -35,26 +35,31 @@ export default async function TrainingManualPage() {
     );
   }
 
-  // First, extract all heading anchors from the markdown
+  // First, extract all heading anchors from the markdown BEFORE processing
   const headingAnchors = new Map();
   const headingRegex = /^(#{1,6})\s+(.+?)(?:\s+\{#([^}]+)\})?$/gm;
   let match;
   
+  // Store mapping of heading text to anchor IDs
+  const headingTextToId = new Map();
+  
   while ((match = headingRegex.exec(manualContent)) !== null) {
+    const fullLine = match[0]; // Full heading line with anchor
     const text = match[2].trim();
     const explicitId = match[3];
     
     if (explicitId) {
-      // Store the original text (with markdown) mapped to the ID
-      headingAnchors.set(text, explicitId);
-      // Also store normalized version (remove markdown formatting)
+      // Store multiple variations for matching
+      headingTextToId.set(text, explicitId);
+      
+      // Normalize text (remove markdown formatting) and store
       const normalized = text
         .replace(/\*\*([^*]+)\*\*/g, '$1')
         .replace(/\*([^*]+)\*/g, '$1')
         .replace(/`([^`]+)`/g, '$1')
-        .toLowerCase()
         .trim();
-      headingAnchors.set(normalized, explicitId);
+      headingTextToId.set(normalized, explicitId);
+      headingTextToId.set(normalized.toLowerCase(), explicitId);
     }
   }
   
@@ -64,26 +69,42 @@ export default async function TrainingManualPage() {
   // Override heading renderer to add IDs
   renderer.heading = function(text, level) {
     // marked.js v17 passes text as a string (may contain HTML from inline markdown)
-    const textStr = String(text || '').trim();
+    let textStr = String(text || '').trim();
     
-    // Extract plain text for ID matching (remove HTML tags)
+    // Remove HTML tags to get plain text
     const plainText = textStr
       .replace(/<[^>]*>/g, '') // Remove HTML tags
-      .replace(/\*\*([^*]+)\*\*/g, '$1') // Remove bold markdown
-      .replace(/\*([^*]+)\*/g, '$1') // Remove italic markdown
-      .replace(/`([^`]+)`/g, '$1') // Remove code markdown
-      .toLowerCase()
       .trim();
     
-    // Try to find matching anchor
-    let id;
-    if (headingAnchors.has(textStr)) {
-      id = headingAnchors.get(textStr);
-    } else if (headingAnchors.has(plainText)) {
-      id = headingAnchors.get(plainText);
-    } else {
-      // Generate ID from plain text
+    // Try multiple matching strategies
+    let id = null;
+    
+    // Strategy 1: Direct match with HTML text
+    if (headingTextToId.has(textStr)) {
+      id = headingTextToId.get(textStr);
+    }
+    // Strategy 2: Match with plain text (no HTML)
+    else if (headingTextToId.has(plainText)) {
+      id = headingTextToId.get(plainText);
+    }
+    // Strategy 3: Match with normalized lowercase
+    else {
+      const normalized = plainText
+        .replace(/\*\*([^*]+)\*\*/g, '$1')
+        .replace(/\*([^*]+)\*/g, '$1')
+        .replace(/`([^`]+)`/g, '$1')
+        .toLowerCase()
+        .trim();
+      
+      if (headingTextToId.has(normalized)) {
+        id = headingTextToId.get(normalized);
+      }
+    }
+    
+    // If no explicit anchor found, generate ID from text
+    if (!id) {
       id = plainText
+        .toLowerCase()
         .replace(/[^\w\s-]/g, '') // Remove special characters
         .replace(/\s+/g, '-') // Replace spaces with dashes
         .replace(/-+/g, '-') // Replace multiple dashes with single dash
