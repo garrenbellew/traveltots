@@ -38,10 +38,13 @@ export default async function TrainingManualPage() {
   const renderer = new marked.Renderer();
   
   // Override heading renderer to add IDs
-  renderer.heading = function(text, level, raw) {
-    // Check if markdown has explicit anchor like {#anchor-id}
-    const anchorMatch = raw.match(/\{#([^}]+)\}/);
+  renderer.heading = function(text, level, raw, slugger) {
     let id;
+    
+    // Check if markdown has explicit anchor like {#anchor-id}
+    // Try raw parameter first, then text as fallback
+    const rawText = raw || text || '';
+    const anchorMatch = rawText.match(/\{#([^}]+)\}/);
     
     if (anchorMatch) {
       // Use explicit anchor from markdown
