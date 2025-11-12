@@ -34,36 +34,34 @@ export default async function TrainingManualPage() {
     );
   }
 
+  // First, extract all heading anchors from the markdown
+  const headingAnchors = new Map();
+  const headingRegex = /^(#{1,6})\s+(.+?)(?:\s+\{#([^}]+)\})?$/gm;
+  let match;
+  
+  while ((match = headingRegex.exec(manualContent)) !== null) {
+    const level = match[1].length;
+    const text = match[2].trim();
+    const explicitId = match[3];
+    
+    if (explicitId) {
+      headingAnchors.set(text, explicitId);
+    }
+  }
+  
   // Configure marked to generate heading IDs for anchor links
   const renderer = new marked.Renderer();
   
   // Override heading renderer to add IDs
-  renderer.heading = function(text, level, raw, slugger) {
+  renderer.heading = function(text, level) {
     let id;
     
     // Ensure text is a string
     const textStr = typeof text === 'string' ? text : String(text || '');
     
-    // Check if markdown has explicit anchor like {#anchor-id}
-    // Try raw parameter first, then text as fallback
-    let rawText = '';
-    if (raw && typeof raw === 'string') {
-      rawText = raw;
-    } else if (textStr) {
-      rawText = textStr;
-    }
-    
-    // Check for explicit anchor syntax
-    const anchorMatch = rawText && typeof rawText === 'string' 
-      ? rawText.match(/\{#([^}]+)\}/) 
-      : null;
-    
-    if (anchorMatch) {
-      // Use explicit anchor from markdown
-      id = anchorMatch[1];
-      // Remove the anchor syntax from the text
-      const cleanedText = textStr.replace(/\{#[^}]+\}/, '').trim();
-      return `<h${level} id="${id}">${cleanedText}</h${level}>`;
+    // Check if we have an explicit anchor for this heading
+    if (headingAnchors.has(textStr)) {
+      id = headingAnchors.get(textStr);
     } else {
       // Generate ID from text (lowercase, replace spaces with dashes, remove special chars)
       id = textStr
@@ -72,9 +70,9 @@ export default async function TrainingManualPage() {
         .replace(/\s+/g, '-') // Replace spaces with dashes
         .replace(/-+/g, '-') // Replace multiple dashes with single dash
         .trim();
-      
-      return `<h${level} id="${id}">${textStr}</h${level}>`;
     }
+    
+    return `<h${level} id="${id}">${textStr}</h${level}>`;
   };
   
   // Configure marked options
