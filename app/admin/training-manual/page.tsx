@@ -41,27 +41,40 @@ export default async function TrainingManualPage() {
   renderer.heading = function(text, level, raw, slugger) {
     let id;
     
+    // Ensure text is a string
+    const textStr = typeof text === 'string' ? text : String(text || '');
+    
     // Check if markdown has explicit anchor like {#anchor-id}
     // Try raw parameter first, then text as fallback
-    const rawText = raw || text || '';
-    const anchorMatch = rawText.match(/\{#([^}]+)\}/);
+    let rawText = '';
+    if (raw && typeof raw === 'string') {
+      rawText = raw;
+    } else if (textStr) {
+      rawText = textStr;
+    }
+    
+    // Check for explicit anchor syntax
+    const anchorMatch = rawText && typeof rawText === 'string' 
+      ? rawText.match(/\{#([^}]+)\}/) 
+      : null;
     
     if (anchorMatch) {
       // Use explicit anchor from markdown
       id = anchorMatch[1];
       // Remove the anchor syntax from the text
-      text = text.replace(/\{#[^}]+\}/, '').trim();
+      const cleanedText = textStr.replace(/\{#[^}]+\}/, '').trim();
+      return `<h${level} id="${id}">${cleanedText}</h${level}>`;
     } else {
       // Generate ID from text (lowercase, replace spaces with dashes, remove special chars)
-      id = text
+      id = textStr
         .toLowerCase()
         .replace(/[^\w\s-]/g, '') // Remove special characters
         .replace(/\s+/g, '-') // Replace spaces with dashes
         .replace(/-+/g, '-') // Replace multiple dashes with single dash
         .trim();
+      
+      return `<h${level} id="${id}">${textStr}</h${level}>`;
     }
-    
-    return `<h${level} id="${id}">${text}</h${level}>`;
   };
   
   // Configure marked options
