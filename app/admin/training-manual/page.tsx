@@ -40,25 +40,21 @@ export default async function TrainingManualPage() {
   const headingRegex = /^(#{1,6})\s+(.+?)(?:\s+\{#([^}]+)\})?$/gm;
   let match;
   
-  // Normalize text for matching (remove markdown formatting, lowercase, trim)
-  function normalizeText(text) {
-    return text
-      .replace(/\*\*([^*]+)\*\*/g, '$1') // Remove bold
-      .replace(/\*([^*]+)\*/g, '$1') // Remove italic
-      .replace(/`([^`]+)`/g, '$1') // Remove code
-      .toLowerCase()
-      .trim();
-  }
-  
   while ((match = headingRegex.exec(manualContent)) !== null) {
-    const level = match[1].length;
     const text = match[2].trim();
     const explicitId = match[3];
     
     if (explicitId) {
-      // Store both original and normalized versions
-      headingAnchors.set(normalizeText(text), explicitId);
-      headingAnchors.set(text.toLowerCase().trim(), explicitId);
+      // Store the original text (with markdown) mapped to the ID
+      headingAnchors.set(text, explicitId);
+      // Also store normalized version (remove markdown formatting)
+      const normalized = text
+        .replace(/\*\*([^*]+)\*\*/g, '$1')
+        .replace(/\*([^*]+)\*/g, '$1')
+        .replace(/`([^`]+)`/g, '$1')
+        .toLowerCase()
+        .trim();
+      headingAnchors.set(normalized, explicitId);
     }
   }
   
@@ -67,37 +63,35 @@ export default async function TrainingManualPage() {
   
   // Override heading renderer to add IDs
   renderer.heading = function(text, level) {
-    let id;
+    // marked.js v17 passes text as a string (may contain HTML from inline markdown)
+    const textStr = String(text || '').trim();
     
-    // Ensure text is a string and extract plain text (remove HTML tags if any)
-    let textStr = typeof text === 'string' ? text : String(text || '');
-    // Remove any HTML tags that might have been added by marked
-    textStr = textStr.replace(/<[^>]*>/g, '').trim();
-    
-    // Extract plain text from markdown-formatted text (remove **bold**, *italic*, etc.)
+    // Extract plain text for ID matching (remove HTML tags)
     const plainText = textStr
-      .replace(/\*\*([^*]+)\*\*/g, '$1') // Remove bold
-      .replace(/\*([^*]+)\*/g, '$1') // Remove italic
-      .replace(/`([^`]+)`/g, '$1') // Remove code
+      .replace(/<[^>]*>/g, '') // Remove HTML tags
+      .replace(/\*\*([^*]+)\*\*/g, '$1') // Remove bold markdown
+      .replace(/\*([^*]+)\*/g, '$1') // Remove italic markdown
+      .replace(/`([^`]+)`/g, '$1') // Remove code markdown
+      .toLowerCase()
       .trim();
     
-    // Try to find matching anchor (try normalized first, then direct match)
-    const normalized = normalizeText(plainText);
-    if (headingAnchors.has(normalized)) {
-      id = headingAnchors.get(normalized);
-    } else if (headingAnchors.has(plainText.toLowerCase().trim())) {
-      id = headingAnchors.get(plainText.toLowerCase().trim());
+    // Try to find matching anchor
+    let id;
+    if (headingAnchors.has(textStr)) {
+      id = headingAnchors.get(textStr);
+    } else if (headingAnchors.has(plainText)) {
+      id = headingAnchors.get(plainText);
     } else {
-      // Generate ID from text (lowercase, replace spaces with dashes, remove special chars)
+      // Generate ID from plain text
       id = plainText
-        .toLowerCase()
         .replace(/[^\w\s-]/g, '') // Remove special characters
         .replace(/\s+/g, '-') // Replace spaces with dashes
         .replace(/-+/g, '-') // Replace multiple dashes with single dash
         .trim();
     }
     
-    return `<h${level} id="${id}">${text}</h${level}>`;
+    // Return heading with ID - text already contains HTML from marked
+    return `<h${level} id="${id}">${textStr}</h${level}>`;
   };
   
   // Configure marked options
