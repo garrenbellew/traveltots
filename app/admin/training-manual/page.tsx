@@ -34,6 +34,40 @@ export default async function TrainingManualPage() {
     );
   }
 
+  // Configure marked to generate heading IDs for anchor links
+  const renderer = new marked.Renderer();
+  
+  // Override heading renderer to add IDs
+  renderer.heading = function(text, level, raw) {
+    // Check if markdown has explicit anchor like {#anchor-id}
+    const anchorMatch = raw.match(/\{#([^}]+)\}/);
+    let id;
+    
+    if (anchorMatch) {
+      // Use explicit anchor from markdown
+      id = anchorMatch[1];
+      // Remove the anchor syntax from the text
+      text = text.replace(/\{#[^}]+\}/, '').trim();
+    } else {
+      // Generate ID from text (lowercase, replace spaces with dashes, remove special chars)
+      id = text
+        .toLowerCase()
+        .replace(/[^\w\s-]/g, '') // Remove special characters
+        .replace(/\s+/g, '-') // Replace spaces with dashes
+        .replace(/-+/g, '-') // Replace multiple dashes with single dash
+        .trim();
+    }
+    
+    return `<h${level} id="${id}">${text}</h${level}>`;
+  };
+  
+  // Configure marked options
+  marked.setOptions({
+    renderer: renderer,
+    gfm: true, // GitHub Flavored Markdown
+    breaks: false,
+  });
+  
   // Convert markdown to HTML
   const htmlContent = await marked(manualContent);
 
@@ -133,6 +167,16 @@ export default async function TrainingManualPage() {
         }
         .prose a:hover {
           text-decoration: underline;
+        }
+        /* Smooth scrolling for anchor links */
+        html {
+          scroll-behavior: smooth;
+        }
+        /* Add padding to account for fixed header when scrolling */
+        .prose h1[id],
+        .prose h2[id],
+        .prose h3[id] {
+          scroll-margin-top: 20px;
         }
         @media print {
           .prose {
