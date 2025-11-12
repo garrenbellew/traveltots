@@ -95,7 +95,22 @@ export default async function TrainingManualPage() {
       .replace(/&quot;/g, '"')
       .trim();
     
-    // Try multiple matching strategies
+    // Normalize text for matching (remove markdown formatting, lowercase)
+    const normalized = plainText
+      .replace(/\*\*([^*]+)\*\*/g, '$1')
+      .replace(/\*([^*]+)\*/g, '$1')
+      .replace(/`([^`]+)`/g, '$1')
+      .toLowerCase()
+      .trim();
+    
+    // Generate what the ID would be from the text (same as TOC links)
+    const generatedId = normalized
+      .replace(/[^\w\s-]/g, '') // Remove special characters
+      .replace(/\s+/g, '-') // Replace spaces with dashes
+      .replace(/-+/g, '-') // Replace multiple dashes with single dash
+      .trim();
+    
+    // Try to find explicit anchor ID
     let id = null;
     
     // Strategy 1: Direct match with HTML text
@@ -106,33 +121,18 @@ export default async function TrainingManualPage() {
     else if (headingTextToId.has(plainText)) {
       id = headingTextToId.get(plainText);
     }
-    // Strategy 3: Match with normalized lowercase (remove markdown formatting)
-    else {
-      const normalized = plainText
-        .replace(/\*\*([^*]+)\*\*/g, '$1')
-        .replace(/\*([^*]+)\*/g, '$1')
-        .replace(/`([^`]+)`/g, '$1')
-        .toLowerCase()
-        .trim();
-      
-      if (headingTextToId.has(normalized)) {
-        id = headingTextToId.get(normalized);
-      }
+    // Strategy 3: Match with normalized lowercase
+    else if (headingTextToId.has(normalized)) {
+      id = headingTextToId.get(normalized);
+    }
+    // Strategy 4: Check if generated ID has an explicit anchor
+    else if (headingTextToId.has(`generated:${generatedId}`)) {
+      id = headingTextToId.get(`generated:${generatedId}`);
     }
     
-    // If no explicit anchor found, generate ID from text (this should match TOC links)
+    // If no explicit anchor found, use generated ID (should match TOC links)
     if (!id) {
-      // Generate ID the same way markdown TOC links are generated
-      const generatedId = plainText
-        .toLowerCase()
-        .replace(/[^\w\s-]/g, '') // Remove special characters
-        .replace(/\s+/g, '-') // Replace spaces with dashes
-        .replace(/-+/g, '-') // Replace multiple dashes with single dash
-        .trim();
-      
-      // Check if we have an explicit ID for this generated ID
-      const explicitId = headingTextToId.get(`generated:${generatedId}`);
-      id = explicitId || generatedId;
+      id = generatedId;
     }
     
     // Return heading with ID - text already contains HTML from marked
