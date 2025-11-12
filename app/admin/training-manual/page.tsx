@@ -39,13 +39,25 @@ export default async function TrainingManualPage() {
   const headingRegex = /^(#{1,6})\s+(.+?)(?:\s+\{#([^}]+)\})?$/gm;
   let match;
   
+  // Normalize text for matching (remove markdown formatting, lowercase, trim)
+  function normalizeText(text) {
+    return text
+      .replace(/\*\*([^*]+)\*\*/g, '$1') // Remove bold
+      .replace(/\*([^*]+)\*/g, '$1') // Remove italic
+      .replace(/`([^`]+)`/g, '$1') // Remove code
+      .toLowerCase()
+      .trim();
+  }
+  
   while ((match = headingRegex.exec(manualContent)) !== null) {
     const level = match[1].length;
     const text = match[2].trim();
     const explicitId = match[3];
     
     if (explicitId) {
-      headingAnchors.set(text, explicitId);
+      // Store both original and normalized versions
+      headingAnchors.set(normalizeText(text), explicitId);
+      headingAnchors.set(text.toLowerCase().trim(), explicitId);
     }
   }
   
@@ -56,12 +68,17 @@ export default async function TrainingManualPage() {
   renderer.heading = function(text, level) {
     let id;
     
-    // Ensure text is a string
-    const textStr = typeof text === 'string' ? text : String(text || '');
+    // Ensure text is a string and extract plain text (remove HTML tags if any)
+    let textStr = typeof text === 'string' ? text : String(text || '');
+    // Remove any HTML tags that might have been added
+    textStr = textStr.replace(/<[^>]*>/g, '').trim();
     
-    // Check if we have an explicit anchor for this heading
-    if (headingAnchors.has(textStr)) {
-      id = headingAnchors.get(textStr);
+    // Try to find matching anchor (try normalized first, then direct match)
+    const normalized = normalizeText(textStr);
+    if (headingAnchors.has(normalized)) {
+      id = headingAnchors.get(normalized);
+    } else if (headingAnchors.has(textStr.toLowerCase().trim())) {
+      id = headingAnchors.get(textStr.toLowerCase().trim());
     } else {
       // Generate ID from text (lowercase, replace spaces with dashes, remove special chars)
       id = textStr
@@ -72,7 +89,7 @@ export default async function TrainingManualPage() {
         .trim();
     }
     
-    return `<h${level} id="${id}">${textStr}</h${level}>`;
+    return `<h${level} id="${id}">${text}</h${level}>`;
   };
   
   // Configure marked options
