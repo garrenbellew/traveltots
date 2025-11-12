@@ -114,23 +114,55 @@ export default async function TrainingManualPage() {
     }
   );
 
+  // Extract table of contents from markdown
+  const tocRegex = /## Table of Contents\n\n([\s\S]*?)\n\n---/;
+  const tocMatch = manualContent.match(tocRegex);
+  let tocHtml = '';
+  
+  if (tocMatch && tocMatch[1]) {
+    // Convert TOC markdown to HTML
+    const tocMarkdown = tocMatch[1];
+    tocHtml = await marked.parse(tocMarkdown);
+  }
+
   return (
     <div className="min-h-screen bg-gray-50">
       <AdminNav />
       <ManualAnchorHandler />
-      <div className="max-w-4xl mx-auto px-4 py-8">
-        <div className="mb-6 flex items-center justify-between">
-          <h1 className="text-3xl font-bold text-gray-900">Admin Training Manual</h1>
-          <PrintButton />
-        </div>
+      <div className="flex gap-8 max-w-7xl mx-auto px-4 py-8">
+        {/* Sticky Table of Contents Sidebar */}
+        {tocHtml && (
+          <aside className="hidden lg:block w-64 flex-shrink-0">
+            <div className="sticky top-24">
+              <div className="card p-4 bg-white shadow-sm">
+                <h2 className="text-lg font-semibold text-gray-900 mb-3">Table of Contents</h2>
+                <div 
+                  className="prose prose-sm max-w-none text-gray-700"
+                  dangerouslySetInnerHTML={{ __html: tocHtml }}
+                  style={{
+                    fontFamily: '-apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif',
+                  }}
+                />
+              </div>
+            </div>
+          </aside>
+        )}
 
-        <div 
-          className="card prose prose-lg max-w-none"
-          dangerouslySetInnerHTML={{ __html: htmlContent }}
-          style={{
-            fontFamily: '-apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif',
-          }}
-        />
+        {/* Main Content */}
+        <div className="flex-1 min-w-0">
+          <div className="mb-6 flex items-center justify-between">
+            <h1 className="text-3xl font-bold text-gray-900">Admin Training Manual</h1>
+            <PrintButton />
+          </div>
+
+          <div 
+            className="card prose prose-lg max-w-none"
+            dangerouslySetInnerHTML={{ __html: htmlContent }}
+            style={{
+              fontFamily: '-apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif',
+            }}
+          />
+        </div>
       </div>
 
       <style dangerouslySetInnerHTML={{
@@ -210,6 +242,27 @@ export default async function TrainingManualPage() {
           text-decoration: none;
         }
         .prose a:hover {
+          text-decoration: underline;
+        }
+        /* Sticky TOC sidebar styling */
+        aside .prose {
+          font-size: 0.875rem;
+        }
+        aside .prose ol {
+          list-style: decimal;
+          padding-left: 1.25rem;
+        }
+        aside .prose li {
+          margin: 0.5rem 0;
+          line-height: 1.5;
+        }
+        aside .prose a {
+          color: #4b5563;
+          text-decoration: none;
+          transition: color 0.2s;
+        }
+        aside .prose a:hover {
+          color: #2563eb;
           text-decoration: underline;
         }
         /* Smooth scrolling for anchor links */
