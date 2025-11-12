@@ -81,14 +81,15 @@ export default async function TrainingManualPage() {
   htmlContent = htmlContent.replace(
     /<h([1-6])>(.*?)<\/h[1-6]>/gi,
     (match, level, content) => {
-      // Extract text from HTML content
-      const text = content
+      // Extract text from HTML content (remove anchor syntax if present)
+      let text = content
         .replace(/<[^>]*>/g, '') // Remove HTML tags
         .replace(/&nbsp;/g, ' ')
         .replace(/&amp;/g, '&')
         .replace(/&lt;/g, '<')
         .replace(/&gt;/g, '>')
         .replace(/&quot;/g, '"')
+        .replace(/\s*\{#([^}]+)\}/g, '') // Remove {#anchor-id} syntax
         .trim();
       
       const normalized = text
@@ -98,15 +99,18 @@ export default async function TrainingManualPage() {
         .replace(/-+/g, '-')
         .trim();
       
-      // Find matching ID
+      // Find matching ID from our map
       let id = headingMap.get(normalized) || headingMap.get(text.toLowerCase().trim());
       
       if (!id) {
-        // Generate ID from text
+        // Generate ID from text (should match TOC links)
         id = normalized;
       }
       
-      return `<h${level} id="${id}">${content}</h${level}>`;
+      // Clean up content to remove {#anchor-id} syntax from display
+      const cleanContent = content.replace(/\s*\{#([^}]+)\}/g, '');
+      
+      return `<h${level} id="${id}">${cleanContent}</h${level}>`;
     }
   );
 
