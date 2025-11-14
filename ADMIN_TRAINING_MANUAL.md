@@ -19,7 +19,8 @@
 10. [Managing Website Pages](#managing-pages)
 11. [Managing Customer Reviews (Testimonials)](#testimonials)
 12. [Settings & Configuration](#settings)
-13. [Troubleshooting](#troubleshooting)
+13. [Search Engine Optimization (SEO)](#seo-optimization)
+14. [Troubleshooting](#troubleshooting)
 
 ---
 
