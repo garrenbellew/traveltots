@@ -3,6 +3,8 @@ export const dynamic = 'force-dynamic'
 import { authenticate } from '@/lib/auth'
 import { checkRateLimit } from '@/lib/rate-limit'
 import { sanitizeInput } from '@/lib/sanitize'
+import { generateAccessToken, generateRefreshToken, setTokenCookies } from '@/lib/jwt'
+import { generateAndSetCSRFToken } from '@/lib/csrf'
 
 export async function POST(request: NextRequest) {
   try {
@@ -51,6 +53,25 @@ export async function POST(request: NextRequest) {
 
     // TODO: Add 2FA verification here
 
+    // Generate JWT tokens
+    const accessToken = generateAccessToken({
+      adminId: user.id,
+      username: user.username,
+      email: user.email,
+    })
+    
+    const refreshToken = generateRefreshToken({
+      adminId: user.id,
+      username: user.username,
+      email: user.email,
+    })
+
+    // Set tokens in HTTP-only cookies
+    await setTokenCookies(accessToken, refreshToken)
+
+    // Generate CSRF token
+    const csrfToken = await generateAndSetCSRFToken()
+
     return NextResponse.json({
       success: true,
       user: {
@@ -58,6 +79,7 @@ export async function POST(request: NextRequest) {
         username: user.username,
         email: user.email,
       },
+      csrfToken, // Return CSRF token for client to include in requests
     })
   } catch (error) {
     console.error('Login error:', error)

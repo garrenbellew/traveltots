@@ -1,15 +1,13 @@
 /**
  * Authentication middleware for API routes
  * 
- * SECURITY NOTE: This is a basic implementation. For production, consider:
- * - Using JWT tokens with proper signing/verification
- * - Storing sessions in Redis or database
- * - Implementing proper session expiration
- * - Using httpOnly cookies instead of localStorage
+ * Uses JWT tokens for secure session management
  */
 
 import { NextRequest, NextResponse } from 'next/server'
 import { prisma } from './prisma'
+import { verifyToken, getTokenFromHeader, getTokenFromCookies } from './jwt'
+import { verifyCSRFToken, getCSRFTokenFromHeader } from './csrf'
 
 export interface AuthenticatedRequest extends NextRequest {
   adminId?: string
@@ -17,12 +15,11 @@ export interface AuthenticatedRequest extends NextRequest {
 }
 
 /**
- * Verify admin session from request headers or cookies
+ * Verify admin session from JWT token in headers or cookies
  * 
- * Current implementation: Checks for admin_session in Authorization header
- * The client should send: Authorization: Bearer <session_token>
- * 
- * TODO: Implement proper JWT or session store verification
+ * Checks for JWT token in:
+ * 1. Authorization header: Bearer <token>
+ * 2. HTTP-only cookie: access_token
  */
 export async function verifyAdminSession(request: NextRequest): Promise<{
   isValid: boolean
@@ -31,54 +28,39 @@ export async function verifyAdminSession(request: NextRequest): Promise<{
   error?: string
 }> {
   try {
-    // Check for session in Authorization header (Bearer token)
-    // Client should send: Authorization: Bearer <admin_session_value>
+    // Try to get token from Authorization header first
     const authHeader = request.headers.get('authorization')
-    let sessionToken: string | null = null
+    let token: string | null = getTokenFromHeader(authHeader)
 
-    if (authHeader && authHeader.startsWith('Bearer ')) {
-      sessionToken = authHeader.substring(7).trim()
-    } else {
-      // Fallback: Check for session in cookie
-      const cookieHeader = request.headers.get('cookie')
-      if (cookieHeader) {
-        const cookies = cookieHeader.split(';').reduce((acc, cookie) => {
-          const [key, value] = cookie.trim().split('=')
-          acc[key] = decodeURIComponent(value || '')
-          return acc
-        }, {} as Record<string, string>)
-        sessionToken = cookies['admin_session'] || null
-      }
+    // If no token in header, try to get from cookie
+    if (!token) {
+      token = await getTokenFromCookies()
     }
 
-    if (!sessionToken || sessionToken === 'null' || sessionToken === 'undefined') {
-      return { isValid: false, error: 'No session token provided' }
+    if (!token) {
+      return { isValid: false, error: 'No authentication token provided' }
     }
 
-    // SECURITY: In production, verify the session token against a session store
-    // For now, we'll check if an admin exists (basic validation)
-    // The session token should ideally be a JWT or reference to a session store
+    // Verify JWT token
+    const payload = verifyToken(token)
     
-    // Verify admin exists (basic check)
-    const admin = await prisma.admin.findFirst()
+    if (!payload || !payload.adminId) {
+      return { isValid: false, error: 'Invalid or expired token' }
+    }
+
+    // Verify admin still exists in database
+    const admin = await prisma.admin.findUnique({
+      where: { id: payload.adminId },
+    })
 
     if (!admin) {
       return { isValid: false, error: 'Admin not found' }
     }
 
-    // TODO: Implement proper session verification
-    // - Decode JWT token if using JWT
-    // - Check session store if using server-side sessions
-    // - Verify token hasn't expired
-    // - Verify token signature
-    
-    // For now, if a token is provided and admin exists, consider it valid
-    // This is NOT secure for production - implement proper session management
-    
     return {
       isValid: true,
-      adminId: admin.id,
-      adminUsername: admin.username,
+      adminId: payload.adminId,
+      adminUsername: payload.username,
     }
   } catch (error) {
     console.error('Error verifying admin session:', error)
@@ -89,10 +71,13 @@ export async function verifyAdminSession(request: NextRequest): Promise<{
 /**
  * Middleware to protect admin API routes
  * Returns 401 if not authenticated
+ * Also verifies CSRF token for state-changing operations
  */
 export async function requireAdminAuth(
-  request: NextRequest
+  request: NextRequest,
+  requireCSRF: boolean = true
 ): Promise<NextResponse | null> {
+  // Verify authentication
   const session = await verifyAdminSession(request)
 
   if (!session.isValid) {
@@ -100,6 +85,22 @@ export async function requireAdminAuth(
       { error: 'Unauthorized. Please log in.' },
       { status: 401 }
     )
+  }
+
+  // Verify CSRF token for state-changing operations (POST, PUT, DELETE, PATCH)
+  if (requireCSRF) {
+    const method = request.method
+    if (['POST', 'PUT', 'DELETE', 'PATCH'].includes(method)) {
+      const csrfToken = getCSRFTokenFromHeader(request)
+      const isValidCSRF = await verifyCSRFToken(csrfToken)
+      
+      if (!isValidCSRF) {
+        return NextResponse.json(
+          { error: 'Invalid CSRF token. Please refresh the page and try again.' },
+          { status: 403 }
+        )
+      }
+    }
   }
 
   return null // Continue to route handler

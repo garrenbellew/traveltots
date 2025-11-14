@@ -2,6 +2,7 @@
 
 import { useState } from 'react'
 import { useRouter } from 'next/navigation'
+import { setCSRFToken } from '@/lib/api-client'
 
 export default function AdminLoginPage() {
   const router = useRouter()
@@ -25,8 +26,14 @@ export default function AdminLoginPage() {
       const data = await response.json()
 
       if (data.success) {
-        // Store session
+        // Store session (for backward compatibility)
         localStorage.setItem('admin_session', JSON.stringify(data.user))
+        
+        // Store CSRF token
+        if (data.csrfToken) {
+          setCSRFToken(data.csrfToken)
+        }
+        
         router.push('/admin/dashboard')
       } else {
         setError(data.error || 'Invalid credentials')

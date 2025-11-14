@@ -15,6 +15,7 @@ import {
   LogOut 
 } from 'lucide-react'
 import { useRouter } from 'next/navigation'
+import { clearAdminSession, clearCSRFToken } from '@/lib/api-client'
 
 export default function AdminNav() {
   const pathname = usePathname()
@@ -33,9 +34,21 @@ export default function AdminNav() {
     { href: '/admin/settings', label: 'Settings', icon: Settings },
   ]
 
-  const handleLogout = () => {
-    localStorage.removeItem('admin_session')
-    router.push('/admin/login')
+  const handleLogout = async () => {
+    try {
+      // Call logout API to clear server-side tokens
+      await fetch('/api/admin/logout', {
+        method: 'POST',
+        credentials: 'include',
+      })
+    } catch (error) {
+      console.error('Error during logout:', error)
+    } finally {
+      // Clear client-side session and CSRF token
+      clearAdminSession()
+      clearCSRFToken()
+      router.push('/admin/login')
+    }
   }
 
   return (
