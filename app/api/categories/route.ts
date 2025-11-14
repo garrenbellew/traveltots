@@ -1,6 +1,8 @@
-import { NextResponse } from 'next/server'
+import { NextRequest, NextResponse } from 'next/server'
 export const dynamic = 'force-dynamic'
 import { prisma } from '@/lib/prisma'
+import { requireAdminAuth } from '@/lib/auth-middleware'
+import { sanitizeInput } from '@/lib/sanitize'
 
 export async function GET() {
   try {
@@ -20,12 +22,21 @@ export async function GET() {
   }
 }
 
-export async function POST(request: Request) {
+export async function POST(request: NextRequest) {
+  // Require admin authentication for creating categories
+  const authError = await requireAdminAuth(request)
+  if (authError) return authError
+  
   try {
     const body = await request.json()
     const { name, slug, description } = body
 
-    if (!name || !slug) {
+    // Sanitize inputs
+    const sanitizedName = sanitizeInput(name || '')
+    const sanitizedSlug = sanitizeInput(slug || '')
+    const sanitizedDescription = sanitizeInput(description || '')
+
+    if (!sanitizedName || !sanitizedSlug) {
       return NextResponse.json(
         { error: 'Name and slug are required' },
         { status: 400 }
@@ -34,9 +45,9 @@ export async function POST(request: Request) {
 
     const category = await prisma.category.create({
       data: {
-        name,
-        slug,
-        description: description || null,
+        name: sanitizedName,
+        slug: sanitizedSlug,
+        description: sanitizedDescription || null,
       },
     })
 

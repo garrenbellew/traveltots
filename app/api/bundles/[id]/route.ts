@@ -1,6 +1,8 @@
 import { NextRequest, NextResponse } from 'next/server'
 export const dynamic = 'force-dynamic'
 import { prisma } from '@/lib/prisma'
+import { requireAdminAuth } from '@/lib/auth-middleware'
+import { sanitizeInput } from '@/lib/sanitize'
 
 // Get a specific bundle
 export async function GET(
@@ -45,16 +47,25 @@ export async function PUT(
   request: NextRequest,
   { params }: { params: { id: string } }
 ) {
+  // Require admin authentication
+  const authError = await requireAdminAuth(request)
+  if (authError) return authError
+  
   try {
     const body = await request.json()
     const { name, slug, description, isActive } = body
 
+    // Sanitize inputs
+    const sanitizedName = name ? sanitizeInput(name) : undefined
+    const sanitizedSlug = slug ? sanitizeInput(slug) : undefined
+    const sanitizedDescription = description !== undefined ? sanitizeInput(description) : undefined
+
     const bundle = await prisma.bundle.update({
       where: { id: params.id },
       data: {
-        name: name || undefined,
-        slug: slug || undefined,
-        description: description !== undefined ? description : undefined,
+        name: sanitizedName,
+        slug: sanitizedSlug,
+        description: sanitizedDescription,
         isActive: isActive !== undefined ? isActive : undefined,
       },
       include: {
@@ -91,6 +102,10 @@ export async function DELETE(
   request: NextRequest,
   { params }: { params: { id: string } }
 ) {
+  // Require admin authentication
+  const authError = await requireAdminAuth(request)
+  if (authError) return authError
+  
   try {
     await prisma.bundle.delete({
       where: { id: params.id },

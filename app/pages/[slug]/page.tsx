@@ -2,6 +2,7 @@ import { prisma } from '@/lib/prisma'
 import { notFound } from 'next/navigation'
 import type { Metadata } from 'next'
 import { generateBreadcrumbStructuredData } from '@/lib/seo'
+import { sanitizeHtml } from '@/lib/sanitize'
 
 interface PageProps {
   params: {
@@ -106,7 +107,7 @@ export default async function PagePage({ params }: PageProps) {
           <div className="prose prose-lg max-w-none" itemProp="text">
             <div 
               className="text-gray-700 leading-relaxed whitespace-pre-wrap"
-              dangerouslySetInnerHTML={{ __html: page.content }}
+              dangerouslySetInnerHTML={{ __html: sanitizeHtml(page.content) }}
             />
           </div>
         </div>

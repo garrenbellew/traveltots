@@ -1,6 +1,8 @@
 import { NextRequest, NextResponse } from 'next/server'
 export const dynamic = 'force-dynamic'
 import { prisma } from '@/lib/prisma'
+import { requireAdminAuth } from '@/lib/auth-middleware'
+import { sanitizeInput } from '@/lib/sanitize'
 
 // GET - Fetch all active testimonials (public) or all testimonials (admin)
 export async function GET(request: NextRequest) {
@@ -22,20 +24,29 @@ export async function GET(request: NextRequest) {
 
 // POST - Create a new testimonial (admin only)
 export async function POST(request: NextRequest) {
+  // Require admin authentication
+  const authError = await requireAdminAuth(request)
+  if (authError) return authError
+  
   try {
     const body = await request.json()
     const { name, location, rating, content, image } = body
 
-    if (!name || !content) {
+    // Sanitize inputs
+    const sanitizedName = sanitizeInput(name || '')
+    const sanitizedLocation = sanitizeInput(location || '')
+    const sanitizedContent = sanitizeInput(content || '')
+
+    if (!sanitizedName || !sanitizedContent) {
       return NextResponse.json({ error: 'Name and content are required' }, { status: 400 })
     }
 
     const testimonial = await prisma.testimonial.create({
       data: {
-        name,
-        location: location || null,
+        name: sanitizedName,
+        location: sanitizedLocation || null,
         rating: rating || 5,
-        content,
+        content: sanitizedContent,
         image: image || null,
         isActive: true,
       },

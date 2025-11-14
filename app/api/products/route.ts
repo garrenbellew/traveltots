@@ -1,6 +1,8 @@
 import { NextRequest, NextResponse } from 'next/server'
 export const dynamic = 'force-dynamic'
 import { prisma } from '@/lib/prisma'
+import { requireAdminAuth } from '@/lib/auth-middleware'
+import { sanitizeInput } from '@/lib/sanitize'
 
 export async function GET(request: NextRequest) {
   try {
@@ -43,12 +45,21 @@ export async function GET(request: NextRequest) {
 }
 
 export async function POST(request: NextRequest) {
+  // Require admin authentication for creating products
+  const authError = await requireAdminAuth(request)
+  if (authError) return authError
+  
   try {
     const body = await request.json()
     const { name, slug, description, price, image, categoryId, totalStock, isActive } = body
 
+    // Sanitize inputs
+    const sanitizedName = sanitizeInput(name || '')
+    const sanitizedSlug = sanitizeInput(slug || '')
+    const sanitizedDescription = sanitizeInput(description || '')
+
     // Basic validation
-    if (!name || !slug || !description || !price || !categoryId) {
+    if (!sanitizedName || !sanitizedSlug || !sanitizedDescription || !price || !categoryId) {
       return NextResponse.json(
         { error: 'Missing required fields' },
         { status: 400 }
@@ -66,9 +77,9 @@ export async function POST(request: NextRequest) {
 
     const product = await prisma.product.create({
       data: {
-        name,
-        slug,
-        description,
+        name: sanitizedName,
+        slug: sanitizedSlug,
+        description: sanitizedDescription,
         price: parseFloat(price),
         image: image || null,
         categoryId,

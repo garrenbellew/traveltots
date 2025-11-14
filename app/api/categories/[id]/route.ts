@@ -1,21 +1,32 @@
 import { NextRequest, NextResponse } from 'next/server'
 export const dynamic = 'force-dynamic'
 import { prisma } from '@/lib/prisma'
+import { requireAdminAuth } from '@/lib/auth-middleware'
+import { sanitizeInput } from '@/lib/sanitize'
 
 export async function PUT(
   request: NextRequest,
   { params }: { params: { id: string } }
 ) {
+  // Require admin authentication
+  const authError = await requireAdminAuth(request)
+  if (authError) return authError
+  
   try {
     const body = await request.json()
     const { name, slug, description } = body
 
+    // Sanitize inputs
+    const sanitizedName = sanitizeInput(name || '')
+    const sanitizedSlug = sanitizeInput(slug || '')
+    const sanitizedDescription = sanitizeInput(description || '')
+
     const category = await prisma.category.update({
       where: { id: params.id },
       data: {
-        name,
-        slug,
-        description: description || null,
+        name: sanitizedName,
+        slug: sanitizedSlug,
+        description: sanitizedDescription || null,
       },
     })
 
@@ -44,6 +55,10 @@ export async function DELETE(
   request: NextRequest,
   { params }: { params: { id: string } }
 ) {
+  // Require admin authentication
+  const authError = await requireAdminAuth(request)
+  if (authError) return authError
+  
   try {
     await prisma.category.delete({
       where: { id: params.id },

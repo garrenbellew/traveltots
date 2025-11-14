@@ -5,6 +5,7 @@ import { useRouter } from 'next/navigation'
 import { formatDateShort, formatCurrency } from '@/lib/utils'
 import { CheckCircle, XCircle, Clock, Package, Edit, MessageCircle, Send } from 'lucide-react'
 import AdminNav from '@/components/AdminNav'
+import { authenticatedFetch } from '@/lib/api-client'
 
 interface Order {
   id: string
@@ -63,7 +64,7 @@ export default function AdminOrdersPage() {
 
   async function fetchMessageTemplates() {
     try {
-      const response = await fetch('/api/admin/settings')
+      const response = await authenticatedFetch('/api/admin/settings')
       const data = await response.json()
       setMessageTemplates({
         confirmed: data.whatsappMessageConfirmed || '',
@@ -148,9 +149,8 @@ export default function AdminOrdersPage() {
 
     setSendingMessage(true)
     try {
-      const response = await fetch('/api/admin/messages', {
+      const response = await authenticatedFetch('/api/admin/messages', {
         method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
           orderId,
           message: replyText,

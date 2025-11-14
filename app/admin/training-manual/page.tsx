@@ -4,6 +4,7 @@ import { marked } from 'marked';
 import AdminNav from '@/components/AdminNav';
 import PrintButton from '@/components/PrintButton';
 import ManualAnchorHandler from '@/components/ManualAnchorHandler';
+import { sanitizeHtml } from '@/lib/sanitize';
 
 export const dynamic = 'force-dynamic';
 
@@ -138,7 +139,7 @@ export default async function TrainingManualPage() {
                 <h2 className="text-lg font-semibold text-gray-900 mb-3">Table of Contents</h2>
                 <div 
                   className="prose prose-sm max-w-none text-gray-700"
-                  dangerouslySetInnerHTML={{ __html: tocHtml }}
+                  dangerouslySetInnerHTML={{ __html: sanitizeHtml(tocHtml) }}
                   style={{
                     fontFamily: '-apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif',
                   }}
@@ -157,7 +158,7 @@ export default async function TrainingManualPage() {
 
           <div 
             className="card prose prose-lg max-w-none"
-            dangerouslySetInnerHTML={{ __html: htmlContent }}
+            dangerouslySetInnerHTML={{ __html: sanitizeHtml(htmlContent) }}
             style={{
               fontFamily: '-apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif',
             }}

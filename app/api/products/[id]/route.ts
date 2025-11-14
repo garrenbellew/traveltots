@@ -1,6 +1,8 @@
 import { NextRequest, NextResponse } from 'next/server'
 export const dynamic = 'force-dynamic'
 import { prisma } from '@/lib/prisma'
+import { requireAdminAuth } from '@/lib/auth-middleware'
+import { sanitizeInput } from '@/lib/sanitize'
 
 export async function GET(
   request: NextRequest,
@@ -37,15 +39,24 @@ export async function PUT(
   request: NextRequest,
   { params }: { params: { id: string } }
 ) {
+  // Require admin authentication for updating products
+  const authError = await requireAdminAuth(request)
+  if (authError) return authError
+  
   try {
     const body = await request.json()
     const { name, slug, description, price, image, categoryId, totalStock, isActive } = body
 
+    // Sanitize inputs
+    const sanitizedName = sanitizeInput(name || '')
+    const sanitizedSlug = sanitizeInput(slug || '')
+    const sanitizedDescription = sanitizeInput(description || '')
+
     // Build update data, only include image if provided
     const updateData: any = {
-      name,
-      slug,
-      description,
+      name: sanitizedName,
+      slug: sanitizedSlug,
+      description: sanitizedDescription,
       price: parseFloat(price),
       categoryId,
       totalStock: parseInt(totalStock),
@@ -79,6 +90,10 @@ export async function DELETE(
   request: NextRequest,
   { params }: { params: { id: string } }
 ) {
+  // Require admin authentication for deleting products
+  const authError = await requireAdminAuth(request)
+  if (authError) return authError
+  
   try {
     await prisma.product.delete({
       where: { id: params.id },

@@ -1,9 +1,13 @@
 import { NextRequest, NextResponse } from 'next/server'
 export const dynamic = 'force-dynamic'
 import { prisma } from '@/lib/prisma'
+import { requireAdminAuth } from '@/lib/auth-middleware'
 
 // Update product sort order
 export async function PUT(request: NextRequest) {
+  // Require admin authentication
+  const authError = await requireAdminAuth(request)
+  if (authError) return authError
   try {
     const body = await request.json()
     const { productId, direction, categoryId } = body
@@ -93,6 +97,10 @@ export async function PUT(request: NextRequest) {
 
 // Bulk update sort orders (for reordering multiple products)
 export async function POST(request: NextRequest) {
+  // Require admin authentication
+  const authError = await requireAdminAuth(request)
+  if (authError) return authError
+  
   try {
     const body = await request.json()
     const { updates } = body // Array of { productId, sortOrder }

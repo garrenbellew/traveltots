@@ -1,6 +1,8 @@
 import { NextRequest, NextResponse } from 'next/server'
 export const dynamic = 'force-dynamic'
 import { prisma } from '@/lib/prisma'
+import { requireAdminAuth } from '@/lib/auth-middleware'
+import { sanitizeInput } from '@/lib/sanitize'
 
 // GET - Fetch a single testimonial
 export async function GET(
@@ -28,20 +30,26 @@ export async function PUT(
   request: NextRequest,
   { params }: { params: { id: string } }
 ) {
+  // Require admin authentication
+  const authError = await requireAdminAuth(request)
+  if (authError) return authError
+  
   try {
     const body = await request.json()
     const { name, location, rating, content, image, isActive } = body
 
+    // Sanitize inputs
+    const updateData: any = {}
+    if (name !== undefined) updateData.name = sanitizeInput(name)
+    if (location !== undefined) updateData.location = sanitizeInput(location)
+    if (rating !== undefined) updateData.rating = rating
+    if (content !== undefined) updateData.content = sanitizeInput(content)
+    if (image !== undefined) updateData.image = image
+    if (isActive !== undefined) updateData.isActive = isActive
+
     const testimonial = await prisma.testimonial.update({
       where: { id: params.id },
-      data: {
-        ...(name !== undefined && { name }),
-        ...(location !== undefined && { location }),
-        ...(rating !== undefined && { rating }),
-        ...(content !== undefined && { content }),
-        ...(image !== undefined && { image }),
-        ...(isActive !== undefined && { isActive }),
-      },
+      data: updateData,
     })
 
     return NextResponse.json(testimonial)
@@ -56,6 +64,10 @@ export async function DELETE(
   request: NextRequest,
   { params }: { params: { id: string } }
 ) {
+  // Require admin authentication
+  const authError = await requireAdminAuth(request)
+  if (authError) return authError
+  
   try {
     await prisma.testimonial.delete({
       where: { id: params.id },

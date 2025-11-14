@@ -1,6 +1,8 @@
 import { NextRequest, NextResponse } from 'next/server'
 export const dynamic = 'force-dynamic'
 import { prisma } from '@/lib/prisma'
+import { requireAdminAuth } from '@/lib/auth-middleware'
+import { sanitizeInput, sanitizeHtml } from '@/lib/sanitize'
 
 export async function GET(request: NextRequest) {
   try {
@@ -28,12 +30,21 @@ export async function GET(request: NextRequest) {
 }
 
 export async function POST(request: NextRequest) {
+  // Require admin authentication
+  const authError = await requireAdminAuth(request)
+  if (authError) return authError
+  
   try {
     const body = await request.json()
     const { title, slug, content, image, isActive } = body
 
+    // Sanitize inputs
+    const sanitizedTitle = sanitizeInput(title || '')
+    const sanitizedSlug = sanitizeInput(slug || '')
+    const sanitizedContent = sanitizeHtml(content || '') // HTML content needs HTML sanitization
+
     // Validate required fields
-    if (!title || !slug || !content) {
+    if (!sanitizedTitle || !sanitizedSlug || !sanitizedContent) {
       return NextResponse.json(
         { error: 'Title, slug, and content are required' },
         { status: 400 }
@@ -43,9 +54,9 @@ export async function POST(request: NextRequest) {
     // Create the page
     const page = await prisma.page.create({
       data: {
-        title,
-        slug,
-        content,
+        title: sanitizedTitle,
+        slug: sanitizedSlug,
+        content: sanitizedContent,
         image: image || null,
         isActive: isActive !== undefined ? isActive : true,
       },

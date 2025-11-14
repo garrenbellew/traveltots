@@ -5,6 +5,7 @@ import { useRouter } from 'next/navigation'
 import { User, Mail, Phone, Send, MessageCircle, Lock } from 'lucide-react'
 import AdminNav from '@/components/AdminNav'
 import { formatDateShort } from '@/lib/utils'
+import { authenticatedFetch } from '@/lib/api-client'
 
 interface Customer {
   id: string | null
@@ -45,7 +46,7 @@ export default function AdminClientsPage() {
 
   async function fetchCustomers() {
     try {
-      const response = await fetch('/api/admin/customers')
+      const response = await authenticatedFetch('/api/admin/customers')
       const data = await response.json()
       setCustomers(data)
     } catch (error) {
@@ -80,9 +81,8 @@ export default function AdminClientsPage() {
     if (!customer.id) return // Only registered customers can be toggled
 
     try {
-      const response = await fetch('/api/admin/customers', {
+      const response = await authenticatedFetch('/api/admin/customers', {
         method: 'PUT',
-        headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
           customerId: customer.id,
           isActive: !customer.isActive,
@@ -103,9 +103,8 @@ export default function AdminClientsPage() {
 
     setResettingPassword(true)
     try {
-      const response = await fetch('/api/admin/customers/reset-password', {
+      const response = await authenticatedFetch('/api/admin/customers/reset-password', {
         method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
           customerId: customer.id,
         }),

@@ -4,6 +4,7 @@ import { useEffect, useState } from 'react'
 import { useRouter } from 'next/navigation'
 import { Save, MessageCircle, DollarSign, Lock, BookOpen, ExternalLink } from 'lucide-react'
 import AdminNav from '@/components/AdminNav'
+import { authenticatedFetch } from '@/lib/api-client'
 
 export default function AdminSettingsPage() {
   const router = useRouter()
@@ -51,9 +52,9 @@ export default function AdminSettingsPage() {
     try {
       setLoading(true)
       const [settingsRes, pricingRes, categoriesRes] = await Promise.all([
-        fetch('/api/admin/settings'),
-        fetch('/api/admin/pricing'),
-        fetch('/api/categories')
+        authenticatedFetch('/api/admin/settings'),
+        authenticatedFetch('/api/admin/pricing'),
+        fetch('/api/categories') // Public endpoint, no auth needed
       ])
       
       if (!settingsRes.ok) {
@@ -127,11 +128,8 @@ export default function AdminSettingsPage() {
 
     try {
       const [settingsRes, pricingRes] = await Promise.all([
-        fetch('/api/admin/settings', {
+        authenticatedFetch('/api/admin/settings', {
           method: 'PUT',
-          headers: {
-            'Content-Type': 'application/json',
-          },
           body: JSON.stringify({
             whatsappNumber,
             whatsappMessageConfirmed: messageConfirmed,
@@ -143,11 +141,8 @@ export default function AdminSettingsPage() {
             contactPhone: contactPhone.trim() || null,
           }),
         }),
-        fetch('/api/admin/pricing', {
+        authenticatedFetch('/api/admin/pricing', {
           method: 'PUT',
-          headers: {
-            'Content-Type': 'application/json',
-          },
           body: JSON.stringify({
             weeklyPricePercentIncrease,
             minOrderValue,
@@ -196,11 +191,8 @@ export default function AdminSettingsPage() {
     setPasswordMessage('')
 
     try {
-      const response = await fetch('/api/admin/change-password', {
+      const response = await authenticatedFetch('/api/admin/change-password', {
         method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
         body: JSON.stringify({
           currentPassword,
           newPassword,
