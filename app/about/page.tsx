@@ -1,7 +1,51 @@
+import type { Metadata } from 'next'
+
+export const metadata: Metadata = {
+  title: 'About Us',
+  description: 'Learn about Travel Tots - your trusted partner for child essentials rental in Los Alcázares, Spain. Quality equipment, safety standards, and personalized service.',
+  openGraph: {
+    title: 'About Travel Tots - Baby Equipment Rental in Los Alcázares',
+    description: 'Learn about Travel Tots - your trusted partner for child essentials rental in Los Alcázares, Spain.',
+    type: 'website',
+  },
+  alternates: {
+    canonical: `${process.env.NEXT_PUBLIC_SITE_URL || 'https://traveltots.es'}/about`,
+  },
+}
+
 export default function AboutPage() {
+  const siteUrl = process.env.NEXT_PUBLIC_SITE_URL || 'https://traveltots.es'
+  
+  // Generate AboutPage structured data
+  const aboutPageStructuredData = {
+    '@context': 'https://schema.org',
+    '@type': 'AboutPage',
+    mainEntity: {
+      '@type': 'Organization',
+      name: 'Travel Tots',
+      description: 'Quality child essentials rental service in Los Alcázares, Spain',
+      url: siteUrl,
+      address: {
+        '@type': 'PostalAddress',
+        addressLocality: 'Los Alcázares',
+        addressRegion: 'Murcia',
+        addressCountry: 'ES',
+      },
+    },
+  }
+  
   return (
-    <div className="max-w-4xl mx-auto px-4 py-12">
-      <h1 className="text-4xl font-bold mb-8">About Travel Tots</h1>
+    <>
+      {/* Structured Data */}
+      <script
+        type="application/ld+json"
+        dangerouslySetInnerHTML={{
+          __html: JSON.stringify(aboutPageStructuredData),
+        }}
+      />
+      
+      <article className="max-w-4xl mx-auto px-4 py-12" itemScope itemType="https://schema.org/AboutPage">
+        <h1 className="text-4xl font-bold mb-8" itemProp="headline">About Travel Tots</h1>
       
       <div className="prose max-w-none">
         <p className="text-lg mb-6">
@@ -39,7 +83,8 @@ export default function AboutPage() {
           We're located in Los Alcázares, Spain, and we're here to help make your family trip hassle-free. Contact us with any questions or special requirements.
         </p>
       </div>
-    </div>
+    </article>
+    </>
   )
 }
 

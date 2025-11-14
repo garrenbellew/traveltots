@@ -1,6 +1,20 @@
 import { prisma } from '@/lib/prisma'
+import type { Metadata } from 'next'
 
 export const dynamic = 'force-dynamic'
+
+export const metadata: Metadata = {
+  title: 'Privacy Policy',
+  description: 'Privacy policy for Travel Tots baby equipment rental service. Learn how we collect, use, and protect your personal information in Los Alcázares, Spain.',
+  openGraph: {
+    title: 'Privacy Policy | Travel Tots',
+    description: 'Privacy policy for Travel Tots baby equipment rental service.',
+    type: 'website',
+  },
+  alternates: {
+    canonical: `${process.env.NEXT_PUBLIC_SITE_URL || 'https://traveltots.es'}/privacy`,
+  },
+}
 
 async function getContactInfo() {
   try {
@@ -21,9 +35,9 @@ export default async function PrivacyPage() {
   const contactInfo = await getContactInfo()
   
   return (
-    <div className="max-w-4xl mx-auto px-4 py-16">
+    <article className="max-w-4xl mx-auto px-4 py-16" itemScope itemType="https://schema.org/PrivacyPolicy">
       <div className="bg-white rounded-3xl shadow-soft p-8 md:p-12">
-        <h1 className="text-5xl font-bold mb-4 bg-gradient-to-r from-vacation-orange to-vacation-coral bg-clip-text text-transparent">
+        <h1 className="text-5xl font-bold mb-4 bg-gradient-to-r from-vacation-orange to-vacation-coral bg-clip-text text-transparent" itemProp="headline">
           🔒 Privacy Policy
         </h1>
         
@@ -150,7 +164,7 @@ export default async function PrivacyPage() {
           </div>
         </section>
       </div>
-    </div>
+    </article>
   )
 }
 

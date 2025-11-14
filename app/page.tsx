@@ -1,8 +1,25 @@
 import Link from 'next/link'
 import { Package, Shield, Clock, Star, User, CheckCircle } from 'lucide-react'
 import { prisma } from '@/lib/prisma'
+import type { Metadata } from 'next'
+import { 
+  generateOrganizationStructuredData, 
+  generateServiceStructuredData,
+  generateLocalBusinessSchema,
+  generateWebSiteSchema 
+} from '@/lib/seo'
 
 export const dynamic = 'force-dynamic'
+
+export const metadata: Metadata = {
+  title: 'Home',
+  description: 'Quality child essentials rental in Los Alcázares, Spain. Car seats, travel cots, prams, strollers, and baby gear for families. Safe, affordable, and convenient rental service with delivery.',
+  openGraph: {
+    title: 'Travel Tots - Child Essentials Rental in Los Alcázares, Spain',
+    description: 'Quality child essentials rental in Los Alcázares, Spain. Car seats, travel cots, prams, strollers, and baby gear for families. Safe, affordable, and convenient rental service.',
+    type: 'website',
+  },
+}
 
 async function getPopularCategories() {
   try {
@@ -45,8 +62,101 @@ const categoryEmojis: Record<string, string> = {
 
 export default async function Home() {
   const popularCategories = await getPopularCategories()
+  const siteUrl = process.env.NEXT_PUBLIC_SITE_URL || 'https://traveltots.es'
+  
+  // Get contact info from database
+  let contactEmail = 'info@traveltots.es'
+  let contactPhone: string | undefined
+  try {
+    const admin = await prisma.admin.findFirst()
+    if (admin) {
+      contactEmail = admin.contactEmail || contactEmail
+      contactPhone = admin.contactPhone || undefined
+    }
+  } catch (error) {
+    console.error('Error fetching contact info:', error)
+  }
+  
+  // Generate structured data
+  const organizationStructuredData = generateOrganizationStructuredData({
+    name: 'Travel Tots',
+    url: siteUrl,
+    logo: `${siteUrl}/logo.png`,
+    description: 'Quality child essentials rental service in Los Alcázares, Spain',
+    contactPoint: {
+      contactType: 'Customer Service',
+      email: contactEmail,
+      ...(contactPhone && { telephone: contactPhone }),
+    },
+  })
+
+  const localBusinessStructuredData = generateLocalBusinessSchema({
+    name: 'Travel Tots',
+    description: 'Quality child essentials rental service in Los Alcázares, Murcia, Spain. Car seats, travel cots, prams, strollers, and baby gear for families.',
+    url: siteUrl,
+    email: contactEmail,
+    ...(contactPhone && { telephone: contactPhone }),
+    address: {
+      streetAddress: 'Los Alcázares',
+      addressLocality: 'Los Alcázares',
+      addressRegion: 'Murcia',
+      postalCode: '30710',
+      addressCountry: 'ES',
+    },
+    geo: {
+      latitude: '37.7444',
+      longitude: '-0.8500',
+    },
+    priceRange: '€€',
+    image: `${siteUrl}/logo.png`,
+    areaServed: {
+      '@type': 'City',
+      name: 'Los Alcázares',
+    },
+  })
+
+  const serviceStructuredData = generateServiceStructuredData({
+    name: 'Child Essentials Rental Service',
+    description: 'Rental of car seats, travel cots, prams, strollers, and baby gear for families traveling to Los Alcázares, Spain',
+    provider: {
+      name: 'Travel Tots',
+      url: siteUrl,
+    },
+    areaServed: 'Los Alcázares, Murcia, Spain',
+    serviceType: 'Baby Equipment Rental',
+  })
+
+  const websiteStructuredData = generateWebSiteSchema(siteUrl, 'Travel Tots')
+
   return (
-    <div className="flex flex-col">
+    <>
+      {/* Structured Data */}
+      <script
+        type="application/ld+json"
+        dangerouslySetInnerHTML={{
+          __html: JSON.stringify(organizationStructuredData),
+        }}
+      />
+      <script
+        type="application/ld+json"
+        dangerouslySetInnerHTML={{
+          __html: JSON.stringify(localBusinessStructuredData),
+        }}
+      />
+      <script
+        type="application/ld+json"
+        dangerouslySetInnerHTML={{
+          __html: JSON.stringify(serviceStructuredData),
+        }}
+      />
+      <script
+        type="application/ld+json"
+        dangerouslySetInnerHTML={{
+          __html: JSON.stringify(websiteStructuredData),
+        }}
+      />
+
+      <div className="flex flex-col">
       {/* Hero Section */}
       <section className="relative bg-gradient-to-br from-vacation-sandLight via-white to-orange-50 py-8 px-4 overflow-hidden">
         <div className="w-full mx-auto">
@@ -54,8 +164,12 @@ export default async function Home() {
             {/* Travel Tots Logo Image */}
             <img 
               src="/logo.png" 
-              alt="Travel Tots - Family at Airport" 
+              alt="Travel Tots - Quality baby equipment rental in Los Alcázares, Spain. Car seats, travel cots, prams, and strollers for families." 
               className="w-full max-w-6xl h-auto object-contain drop-shadow-lg"
+              width={1200}
+              height={630}
+              loading="eager"
+              fetchPriority="high"
             />
           </div>
         </div>

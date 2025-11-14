@@ -2,8 +2,22 @@ import { prisma } from '@/lib/prisma'
 import Link from 'next/link'
 import BundleBookingForm from '@/components/BundleBookingForm'
 import { formatCurrency } from '@/lib/utils'
+import type { Metadata } from 'next'
 
 export const dynamic = 'force-dynamic'
+
+export const metadata: Metadata = {
+  title: 'Product Bundles',
+  description: 'Save money with our baby equipment bundles in Los Alcázares, Spain. Convenient packages combining car seats, travel cots, prams, and more at discounted prices.',
+  openGraph: {
+    title: 'Baby Equipment Bundles - Travel Tots',
+    description: 'Save money with our baby equipment bundles. Convenient packages at discounted prices.',
+    type: 'website',
+  },
+  alternates: {
+    canonical: `${process.env.NEXT_PUBLIC_SITE_URL || 'https://traveltots.es'}/bundles`,
+  },
+}
 
 async function getBundles() {
   return await prisma.bundle.findMany({
@@ -29,10 +43,38 @@ async function getBundles() {
 
 export default async function BundlesPage() {
   const bundles = await getBundles()
+  const siteUrl = process.env.NEXT_PUBLIC_SITE_URL || 'https://traveltots.es'
+  
+  // Generate ItemList structured data for bundles
+  const itemListStructuredData = {
+    '@context': 'https://schema.org',
+    '@type': 'ItemList',
+    itemListElement: bundles.map((bundle, index) => ({
+      '@type': 'ListItem',
+      position: index + 1,
+      item: {
+        '@type': 'Product',
+        name: bundle.name,
+        description: bundle.description || `${bundle.name} - Baby equipment bundle`,
+        url: `${siteUrl}/bundles`,
+      },
+    })),
+  }
 
   return (
-    <div className="max-w-7xl mx-auto px-4 py-12">
-      <h1 className="text-4xl font-bold mb-8">Product Bundles</h1>
+    <>
+      {/* Structured Data */}
+      {bundles.length > 0 && (
+        <script
+          type="application/ld+json"
+          dangerouslySetInnerHTML={{
+            __html: JSON.stringify(itemListStructuredData),
+          }}
+        />
+      )}
+      
+      <div className="max-w-7xl mx-auto px-4 py-12">
+        <h1 className="text-4xl font-bold mb-8">Product Bundles</h1>
       
       <p className="text-lg text-gray-600 mb-12">
         Our convenient bundles combine multiple items at a discounted price, perfect for families traveling with babies and young children.
@@ -85,6 +127,7 @@ export default async function BundlesPage() {
         </div>
       )}
     </div>
+    </>
   )
 }
 

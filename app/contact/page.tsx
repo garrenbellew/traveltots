@@ -1,6 +1,21 @@
 import { prisma } from '@/lib/prisma'
+import type { Metadata } from 'next'
+import { generateLocalBusinessSchema } from '@/lib/seo'
 
 export const dynamic = 'force-dynamic'
+
+export const metadata: Metadata = {
+  title: 'Contact Us',
+  description: 'Contact Travel Tots in Los Alcázares, Spain. Get in touch for baby equipment rental inquiries, bookings, and support. Email, phone, and location information.',
+  openGraph: {
+    title: 'Contact Travel Tots - Baby Equipment Rental in Los Alcázares',
+    description: 'Contact Travel Tots for baby equipment rental in Los Alcázares, Spain. We\'re here to help with your rental needs.',
+    type: 'website',
+  },
+  alternates: {
+    canonical: `${process.env.NEXT_PUBLIC_SITE_URL || 'https://traveltots.es'}/contact`,
+  },
+}
 
 async function getContactInfo() {
   try {
@@ -19,10 +34,45 @@ async function getContactInfo() {
 
 export default async function ContactPage() {
   const contactInfo = await getContactInfo()
+  const siteUrl = process.env.NEXT_PUBLIC_SITE_URL || 'https://traveltots.es'
+  
+  // Generate LocalBusiness structured data for contact page
+  const localBusinessStructuredData = generateLocalBusinessSchema({
+    name: 'Travel Tots',
+    description: 'Quality child essentials rental service in Los Alcázares, Murcia, Spain',
+    url: siteUrl,
+    email: contactInfo.email,
+    ...(contactInfo.phone && { telephone: contactInfo.phone }),
+    address: {
+      streetAddress: 'Los Alcázares',
+      addressLocality: 'Los Alcázares',
+      addressRegion: 'Murcia',
+      postalCode: '30710',
+      addressCountry: 'ES',
+    },
+    geo: {
+      latitude: '37.7444',
+      longitude: '-0.8500',
+    },
+    priceRange: '€€',
+    image: `${siteUrl}/logo.png`,
+    openingHours: [
+      'Mo-Sa 09:00-19:00',
+    ],
+  })
   
   return (
-    <div className="max-w-4xl mx-auto px-4 py-12">
-      <h1 className="text-4xl font-bold mb-8">Contact Us</h1>
+    <>
+      {/* Structured Data */}
+      <script
+        type="application/ld+json"
+        dangerouslySetInnerHTML={{
+          __html: JSON.stringify(localBusinessStructuredData),
+        }}
+      />
+      
+      <div className="max-w-4xl mx-auto px-4 py-12">
+        <h1 className="text-4xl font-bold mb-8">Contact Us</h1>
       
       <div className="grid md:grid-cols-2 gap-12">
         <div>
@@ -109,7 +159,7 @@ export default async function ContactPage() {
           </div>
         </div>
       </div>
-    </div>
+    </>
   )
 }
 

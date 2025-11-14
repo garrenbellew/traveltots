@@ -1,7 +1,22 @@
+import type { Metadata } from 'next'
+
+export const metadata: Metadata = {
+  title: 'Terms & Conditions',
+  description: 'Terms and conditions for Travel Tots baby equipment rental service in Los Alcázares, Spain. Booking, payment, rental period, and liability information.',
+  openGraph: {
+    title: 'Terms & Conditions | Travel Tots',
+    description: 'Terms and conditions for Travel Tots baby equipment rental service.',
+    type: 'website',
+  },
+  alternates: {
+    canonical: `${process.env.NEXT_PUBLIC_SITE_URL || 'https://traveltots.es'}/terms`,
+  },
+}
+
 export default function TermsPage() {
   return (
-    <div className="max-w-4xl mx-auto px-4 py-12">
-      <h1 className="text-4xl font-bold mb-8">Terms & Conditions</h1>
+    <article className="max-w-4xl mx-auto px-4 py-12" itemScope itemType="https://schema.org/TermsOfService">
+      <h1 className="text-4xl font-bold mb-8" itemProp="headline">Terms & Conditions</h1>
       
       <div className="prose max-w-none">
         <p className="text-sm text-gray-600 mb-8">
@@ -57,7 +72,7 @@ export default function TermsPage() {
           </p>
         </section>
       </div>
-    </div>
+    </article>
   )
 }
 

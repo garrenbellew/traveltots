@@ -2,6 +2,7 @@
 
 import { useEffect, useState } from 'react'
 import { Star, Quote } from 'lucide-react'
+import type { Metadata } from 'next'
 
 interface Testimonial {
   id: string
