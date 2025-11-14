@@ -12,6 +12,14 @@ async function main() {
     const admins = await prisma.admin.findMany();
     console.log('Found admins:', admins.length);
     
+    // SECURITY WARNING: This script resets admin password to default
+    // Only use in development - NEVER in production!
+    if (process.env.NODE_ENV === 'production') {
+      console.error('❌ SECURITY ERROR: This script cannot be run in production!');
+      console.error('   Use the admin panel to change passwords in production.');
+      process.exit(1);
+    }
+    
     // Reset password for admin
     const hashedPassword = await bcrypt.hash('admin', 10);
     
@@ -35,7 +43,9 @@ async function main() {
       console.log('  ID:', admin.id);
       console.log('  Username:', admin.username);
       console.log('  Email:', admin.email);
+      // SECURITY: Only show partial hash, never full password
       console.log('  Password hash:', admin.password.substring(0, 20) + '...');
+      console.log('  ⚠️  SECURITY: Default password set. Change immediately after login!');
     } else {
       console.log('No admin user found');
     }

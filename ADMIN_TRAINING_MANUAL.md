@@ -21,6 +21,7 @@
 12. [Settings & Configuration](#settings)
 13. [Search Engine Optimization (SEO)](#seo-optimization)
 14. [Troubleshooting](#troubleshooting)
+15. [Appendix A: Website Security Features](#security-appendix)
 
 ---
 
@@ -713,6 +714,246 @@ If you're stuck:
 ✅ **Never** delete categories with products in them (delete products first!)  
 ✅ **Remember** to mark orders as completed after collection  
 ✅ **Remember** to assign products to bundles from the product edit page  
+
+---
+
+## Appendix A: Website Security Features {#security-appendix}
+
+### Overview
+
+Your Travel Tots website has been built with **enterprise-grade security** to protect your business data, customer information, and prevent unauthorized access. This section explains the security features that are working behind the scenes to keep your website safe.
+
+---
+
+### 🔐 Authentication & Access Control
+
+#### **JWT-Based Session Management**
+- **What it is:** Your login uses secure JWT (JSON Web Token) technology
+- **How it works:** When you log in, the system creates encrypted tokens that prove your identity
+- **Security benefits:**
+  - Tokens are stored in secure HTTP-only cookies (can't be accessed by malicious scripts)
+  - Tokens automatically expire after 24 hours for security
+  - If your token expires, you'll be asked to log in again
+- **What you need to know:** Just log in normally - the system handles everything securely
+
+#### **Two-Factor Authentication (2FA)**
+- **Status:** Available for future implementation
+- **What it is:** An extra layer of security that requires a code from your phone in addition to your password
+- **When enabled:** You'll be notified and given setup instructions
+
+#### **Password Security**
+- **Strong Password Requirements:**
+  - Minimum 8 characters
+  - Must include uppercase letters (A-Z)
+  - Must include lowercase letters (a-z)
+  - Must include numbers (0-9)
+  - Must include special characters (!@#$%^&*)
+- **Password Storage:** All passwords are encrypted using industry-standard bcrypt hashing
+- **Password Reset:** Secure token-based password reset system
+
+---
+
+### 🛡️ Protection Against Attacks
+
+#### **CSRF Protection (Cross-Site Request Forgery)**
+- **What it protects against:** Prevents malicious websites from making unauthorized changes on your behalf
+- **How it works:** Every action you take (saving, deleting, updating) includes a special security token
+- **What you need to know:** Works automatically - you don't need to do anything
+
+#### **Rate Limiting**
+- **What it protects against:** Prevents brute force attacks (hackers trying thousands of password combinations)
+- **How it works:** Limits login attempts to 5 tries per 15 minutes per IP address
+- **What you need to know:** If you enter your password wrong 5 times, wait 15 minutes before trying again
+
+#### **Input Sanitization**
+- **What it protects against:** Prevents malicious code injection (XSS attacks)
+- **How it works:** All text you enter is automatically cleaned and validated before being saved
+- **What you need to know:** You can enter text normally - the system automatically protects against dangerous content
+
+#### **XSS Protection (Cross-Site Scripting)**
+- **What it protects against:** Prevents malicious scripts from running on your website
+- **How it works:** All user-generated content is sanitized before display
+- **What you need to know:** Works automatically - your content is safe
+
+---
+
+### 🔒 Data Protection
+
+#### **Password Exposure Prevention**
+- **What it protects:** Customer passwords are never exposed, even to administrators
+- **How it works:** Password hashes are stored securely and never returned in API responses
+- **What you need to know:** You cannot see customer passwords (this is by design for security)
+
+#### **Secure File Uploads**
+- **What it protects against:** Malicious file uploads that could harm the server
+- **How it works:**
+  - Only image files are allowed
+  - File size is limited to 5MB
+  - File names are sanitized
+  - Uploads require admin authentication
+- **What you need to know:** Only upload legitimate product images
+
+#### **Database Security**
+- **What it protects:** Your business data and customer information
+- **How it works:**
+  - All database queries use parameterized statements (prevents SQL injection)
+  - Admin actions require authentication
+  - Sensitive operations require CSRF tokens
+- **What you need to know:** The system automatically protects your data
+
+---
+
+### 🌐 Network & Communication Security
+
+#### **Security Headers**
+Your website includes multiple security headers that protect against various attacks:
+
+- **Content Security Policy (CSP):** Prevents malicious scripts from running
+- **X-Frame-Options:** Prevents your site from being embedded in malicious frames
+- **X-Content-Type-Options:** Prevents MIME-type sniffing attacks
+- **Strict Transport Security (HSTS):** Forces HTTPS connections in production
+- **Referrer Policy:** Controls what information is shared when users click links
+
+**What you need to know:** These work automatically - no action required
+
+#### **HTTPS Encryption**
+- **In Production:** All communication is encrypted using HTTPS
+- **What it protects:** Prevents data interception during transmission
+- **What you need to know:** Always access your admin panel over HTTPS (the lock icon in your browser)
+
+---
+
+### 🔍 Security Monitoring & Logging
+
+#### **Error Handling**
+- **What it does:** Errors are logged securely without exposing sensitive information
+- **What you need to know:** If you see an error, it's been logged for the administrator to review
+
+#### **Authentication Logging**
+- **What it tracks:** Login attempts (successful and failed)
+- **What you need to know:** Unusual login patterns are monitored
+
+---
+
+### ✅ Security Best Practices for Admins
+
+#### **Password Management**
+1. ✅ Use a **strong, unique password** (follow the requirements above)
+2. ✅ **Never share** your password with anyone
+3. ✅ **Change your password** if you suspect it's been compromised
+4. ✅ **Don't reuse** passwords from other websites
+5. ✅ **Log out** when finished, especially on shared computers
+
+#### **Account Security**
+1. ✅ **Never leave** your admin session open on public computers
+2. ✅ **Always log out** when finished
+3. ✅ **Report suspicious activity** immediately
+4. ✅ **Keep your email address updated** for password resets
+
+#### **Data Handling**
+1. ✅ **Only access** the admin panel from trusted networks
+2. ✅ **Be cautious** of suspicious emails asking for login details
+3. ✅ **Verify URLs** before entering credentials (check for HTTPS and correct domain)
+4. ✅ **Don't click** suspicious links in emails
+
+#### **System Updates**
+1. ✅ **Keep your browser updated** to the latest version
+2. ✅ **Use modern browsers** (Chrome, Firefox, Safari, Edge)
+3. ✅ **Enable automatic updates** for your operating system
+
+---
+
+### 🚨 What to Do If You Suspect a Security Issue
+
+1. **Immediately change your password** in Settings
+2. **Log out** of all sessions
+3. **Contact your website administrator** immediately
+4. **Report any suspicious activity** you notice
+5. **Don't panic** - the system has multiple layers of protection
+
+---
+
+### 🔐 Security Features Summary
+
+| Feature | Status | Protection Level |
+|---------|--------|------------------|
+| JWT Authentication | ✅ Active | High |
+| CSRF Protection | ✅ Active | High |
+| Rate Limiting | ✅ Active | Medium |
+| Input Sanitization | ✅ Active | High |
+| XSS Protection | ✅ Active | High |
+| Password Encryption | ✅ Active | High |
+| Secure File Uploads | ✅ Active | Medium |
+| Security Headers | ✅ Active | High |
+| HTTPS Encryption | ✅ Active (Production) | High |
+| 2FA | ⏳ Available | N/A |
+
+---
+
+### 📋 Security Checklist
+
+Use this checklist to ensure you're following security best practices:
+
+- [ ] I have a strong password (8+ chars, mixed case, numbers, symbols)
+- [ ] I change my password regularly (every 90 days recommended)
+- [ ] I never share my password with anyone
+- [ ] I always log out when finished
+- [ ] I access the admin panel only from trusted networks
+- [ ] I keep my browser updated
+- [ ] I report suspicious activity immediately
+- [ ] I verify URLs before entering credentials
+
+---
+
+### 💡 Security Tips
+
+1. **Use a Password Manager:** Consider using a password manager (like LastPass, 1Password, or Bitwarden) to generate and store strong passwords securely.
+
+2. **Enable Browser Security Features:** 
+   - Enable "Always use secure connections" in your browser
+   - Enable phishing and malware protection
+   - Keep browser extensions updated
+
+3. **Be Wary of Phishing:**
+   - Never click links in suspicious emails
+   - Always type the admin URL directly or use a bookmark
+   - Verify the website URL before logging in
+
+4. **Regular Security Reviews:**
+   - Review your account activity regularly
+   - Check for any unauthorized changes
+   - Report anything suspicious immediately
+
+---
+
+### 🔒 What You Don't Need to Worry About
+
+The following security features work automatically - you don't need to configure or manage them:
+
+- ✅ Token generation and validation
+- ✅ CSRF token management
+- ✅ Input sanitization
+- ✅ XSS protection
+- ✅ Security headers
+- ✅ Password hashing
+- ✅ Session management
+- ✅ Rate limiting
+
+**Your job is simple:** Use strong passwords, log out when finished, and report anything suspicious. The system handles the rest!
+
+---
+
+### 📞 Security Support
+
+If you have security concerns or questions:
+
+1. **Check this manual first** - many security questions are answered here
+2. **Contact your website administrator** for technical security issues
+3. **Report security incidents immediately** - don't wait
+
+---
+
+**Remember:** Security is a shared responsibility. By following these guidelines, you help keep your website and customer data safe! 🔒
 
 ---
 

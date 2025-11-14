@@ -5,7 +5,17 @@
 import jwt from 'jsonwebtoken'
 import { cookies } from 'next/headers'
 
-const JWT_SECRET = process.env.JWT_SECRET || 'your-secret-key-change-in-production'
+// SECURITY: JWT_SECRET must be set via environment variable
+// In production, throw error if not set to prevent insecure default
+const JWT_SECRET = process.env.JWT_SECRET || (() => {
+  if (process.env.NODE_ENV === 'production') {
+    throw new Error('JWT_SECRET environment variable is required in production. Please set it in your environment variables.')
+  }
+  // Development fallback - should still be set in .env.local
+  console.warn('⚠️  WARNING: JWT_SECRET not set. Using insecure default for development only. Set JWT_SECRET in .env.local for security.')
+  return 'dev-secret-key-change-in-production-not-secure'
+})()
+
 const JWT_EXPIRES_IN = process.env.JWT_EXPIRES_IN || '24h' // 24 hours
 const JWT_REFRESH_EXPIRES_IN = process.env.JWT_REFRESH_EXPIRES_IN || '7d' // 7 days
 

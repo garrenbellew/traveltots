@@ -43,20 +43,31 @@ export async function POST(request: NextRequest) {
 
     // In a real implementation, you would send a WhatsApp message here
     // For now, we'll return the reset link (in production, send via WhatsApp)
-    const resetUrl = `${process.env.NEXT_PUBLIC_URL || 'http://localhost:3000'}/customer/reset-password?token=${token}`
+    const siteUrl = process.env.NEXT_PUBLIC_URL || process.env.NEXT_PUBLIC_SITE_URL
+    if (!siteUrl) {
+      console.error('NEXT_PUBLIC_URL or NEXT_PUBLIC_SITE_URL must be set for password reset')
+    }
+    const resetUrl = siteUrl ? `${siteUrl}/customer/reset-password?token=${token}` : null
 
     // TODO: Send WhatsApp message with reset link to customer's phone
-    console.log('Password reset link:', resetUrl)
-    console.log('Send this to customer:', customer.phone)
+    // SECURITY: Only log in development, never in production
+    if (process.env.NODE_ENV === 'development') {
+      console.log('Password reset link (DEV ONLY):', resetUrl)
+      console.log('Send this to customer:', customer.phone)
+    }
 
-    return NextResponse.json(
-      { 
-        message: 'If an account with that email exists, a password reset link has been sent.',
-        // In development only - remove in production
-        resetUrl: process.env.NODE_ENV === 'development' ? resetUrl : undefined
-      },
-      { status: 200 }
-    )
+    // SECURITY: Only return reset URL in development for testing
+    // In production, the link should be sent via WhatsApp/email
+    const response: any = {
+      message: 'If an account with that email exists, a password reset link has been sent.',
+    }
+    
+    // Only include resetUrl in development
+    if (process.env.NODE_ENV === 'development' && resetUrl) {
+      response.resetUrl = resetUrl
+    }
+    
+    return NextResponse.json(response, { status: 200 })
   } catch (error: any) {
     console.error('Error requesting password reset:', error)
     return NextResponse.json(

@@ -32,7 +32,9 @@ async function main() {
       console.log('✅ Default admin user created:');
       console.log('   Username: admin');
       console.log('   Password: admin');
-      console.log('   ⚠️  Please change the password after first login!');
+      console.log('   ⚠️  SECURITY WARNING: This is a default password for development only!');
+      console.log('   ⚠️  You MUST change this password immediately after first login!');
+      console.log('   ⚠️  NEVER use default passwords in production!');
     } else {
       // Reset password to 'admin' if user already exists
       const hashedPassword = await bcrypt.hash('admin', 10);
@@ -41,7 +43,9 @@ async function main() {
         data: { password: hashedPassword }
       });
       console.log('✅ Admin password reset to: admin');
-      console.log('   ⚠️  Please change the password after login!');
+      console.log('   ⚠️  SECURITY WARNING: This script resets to a default password!');
+      console.log('   ⚠️  Only use this script in development environments!');
+      console.log('   ⚠️  Change the password immediately after login!');
     }
     console.log('✅ Database initialization complete');
   } catch (error) {

@@ -46,3 +46,4 @@ next-env.d.ts
 *.swp
 *.swo
 *~
+PRODUCTION_JWT_SECRET.txt

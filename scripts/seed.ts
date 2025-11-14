@@ -94,6 +94,8 @@ async function main() {
   })
 
   console.log('Created admin user (username: admin, password: admin123)')
+  console.log('⚠️  SECURITY WARNING: Default password set. Change immediately after login!')
+  console.log('⚠️  This script is for development only - NEVER run in production!')
 
   // Create sample pages
   const pages = [
