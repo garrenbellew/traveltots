@@ -10,7 +10,8 @@ import { requireAdminAuth } from '@/lib/auth-middleware'
 
 export async function GET(request: NextRequest) {
   // Require authentication to get CSRF token
-  const authError = await requireAdminAuth(request, false) // Don't require CSRF for GET
+  // Don't require CSRF for GET requests
+  const authError = await requireAdminAuth(request, false)
   if (authError) return authError
 
   try {
