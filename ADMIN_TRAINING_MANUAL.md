@@ -480,6 +480,127 @@ Settings control important aspects of your business.
 
 ---
 
+## Search Engine Optimization (SEO) {#seo-optimization}
+
+### What is SEO?
+
+SEO (Search Engine Optimization) helps your website appear higher in search results when people search for baby equipment rental in your area. The better your SEO, the more customers can find you on Google and other search engines.
+
+### What Has Been Implemented?
+
+Your Travel Tots website has been fully optimized for search engines with the following improvements:
+
+#### 1. **Structured Data (Rich Snippets)**
+- Your business information (name, address, phone, hours) is formatted in a way search engines understand
+- Product pages include detailed information that can appear as rich results in search
+- This helps Google show your business details, ratings, and product information directly in search results
+
+#### 2. **Sitemap**
+- A sitemap (`/sitemap.xml`) automatically lists all your pages, products, and categories
+- Search engines use this to discover and index all your content
+- The sitemap updates automatically when you add new products or pages
+
+#### 3. **Page Titles and Descriptions**
+- Every page has a unique, descriptive title and description
+- These appear in search results and help people understand what each page is about
+- Product pages include the product name, category, and location in their titles
+
+#### 4. **Image Optimization**
+- All product images have descriptive alt text
+- This helps visually impaired users and helps search engines understand your images
+- Images are optimized for fast loading
+
+#### 5. **Mobile-Friendly Design**
+- Your website is fully responsive and works perfectly on phones and tablets
+- Google prioritizes mobile-friendly websites in search results
+
+#### 6. **Fast Loading Speed**
+- The website is optimized for quick page loads
+- Fast websites rank better in search results
+
+#### 7. **Local Business Information**
+- Your business location (Los Alcázares, Spain) is properly marked for local search
+- This helps you appear in "near me" searches and Google Maps
+
+### What You Can Do to Help SEO
+
+While the technical SEO is already set up, here are things you can do to improve your search rankings:
+
+#### 1. **Write Good Product Descriptions**
+- When adding or editing products, write clear, detailed descriptions
+- Include keywords people might search for (e.g., "car seat rental Los Alcázares")
+- Describe the product's features and benefits
+- Mention safety standards and quality
+
+**Example of a good description:**
+> "High-quality car seat rental in Los Alcázares, Spain. This EU-approved car seat is suitable for children aged 9 months to 12 years. Includes easy installation instructions. Perfect for families traveling to the Costa Cálida region."
+
+#### 2. **Use Clear Product Names**
+- Use descriptive names that include what the product is
+- Example: "Maxi-Cosi Car Seat - Group 1/2/3" is better than just "Car Seat"
+
+#### 3. **Add High-Quality Images**
+- Upload clear, well-lit product photos
+- Show the product from multiple angles
+- Use images that show the product in use (if appropriate)
+
+#### 4. **Keep Content Updated**
+- Regularly update product descriptions
+- Add new products and categories
+- Update your website pages with current information
+- Fresh content helps with search rankings
+
+#### 5. **Get Customer Reviews**
+- Encourage customers to leave testimonials
+- Positive reviews help with local search rankings
+- Reviews appear in search results and build trust
+
+#### 6. **Use Popular Categories**
+- In Settings, select your 3 most popular categories
+- These appear on your homepage and help with SEO
+
+#### 7. **Complete Product Information**
+- Always fill in all product fields (name, description, price, category)
+- Add images whenever possible
+- The more complete your product information, the better it ranks
+
+### Understanding Search Results
+
+When someone searches for "baby equipment rental Los Alcázares" or similar terms, search engines look for:
+
+- **Relevant content** - Does your website mention these keywords?
+- **Local relevance** - Are you located in or serving Los Alcázares?
+- **Quality** - Is your website professional and trustworthy?
+- **User experience** - Is your website easy to use and fast?
+
+### Monitoring Your SEO
+
+You can check how your website is performing:
+
+1. **Google Search Console** - Shows how often your site appears in search results
+2. **Google Analytics** - Shows how many visitors you get and where they come from
+3. **Search for yourself** - Try searching for "baby equipment rental Los Alcázares" and see if your site appears
+
+### Important Notes
+
+- **SEO takes time** - It can take weeks or months to see results
+- **Be patient** - Search engines need time to discover and index your content
+- **Keep content fresh** - Regularly adding products and updating information helps
+- **Quality over quantity** - Better to have fewer, well-described products than many incomplete ones
+
+### What You Don't Need to Worry About
+
+The technical SEO work is already done! You don't need to:
+- Edit code or technical settings
+- Create sitemaps manually
+- Add structured data yourself
+- Worry about mobile responsiveness
+- Optimize images manually (this is automatic)
+
+Just focus on creating great content, adding products with good descriptions, and keeping your information up to date!
+
+---
+
 ## Troubleshooting {#troubleshooting}
 
 ### "I Can't Log In"
