@@ -4,6 +4,7 @@ import { writeFile, mkdir } from 'fs/promises'
 import { join } from 'path'
 import { existsSync } from 'fs'
 import { v2 as cloudinary } from 'cloudinary'
+import { requireAdminAuth } from '@/lib/auth-middleware'
 
 // Configure Cloudinary
 cloudinary.config({
@@ -13,6 +14,10 @@ cloudinary.config({
 })
 
 export async function POST(request: NextRequest) {
+  // Require admin authentication for file uploads
+  const authError = await requireAdminAuth(request)
+  if (authError) return authError
+  
   try {
     console.log('Upload endpoint called')
     const formData = await request.formData()

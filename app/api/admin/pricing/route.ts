@@ -1,8 +1,12 @@
 import { NextRequest, NextResponse } from 'next/server'
 export const dynamic = 'force-dynamic'
 import { prisma } from '@/lib/prisma'
+import { requireAdminAuth } from '@/lib/auth-middleware'
 
 export async function GET(request: NextRequest) {
+  // Require admin authentication
+  const authError = await requireAdminAuth(request)
+  if (authError) return authError
   try {
     let config = await prisma.pricingConfig.findFirst()
     
@@ -29,6 +33,10 @@ export async function GET(request: NextRequest) {
 }
 
 export async function PUT(request: NextRequest) {
+  // Require admin authentication
+  const authError = await requireAdminAuth(request)
+  if (authError) return authError
+  
   try {
     const body = await request.json()
     const { 

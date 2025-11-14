@@ -1,8 +1,13 @@
 import { NextRequest, NextResponse } from 'next/server'
 export const dynamic = 'force-dynamic'
 import { prisma } from '@/lib/prisma'
+import { requireAdminAuth } from '@/lib/auth-middleware'
 
 export async function GET(request: NextRequest) {
+  // Require admin authentication
+  const authError = await requireAdminAuth(request)
+  if (authError) return authError
+  
   try {
     // Get registered customers
     const registeredCustomers = await prisma.customer.findMany({
@@ -49,7 +54,7 @@ export async function GET(request: NextRequest) {
         name: customer.name,
         email: customer.email,
         phone: customer.phone,
-        password: customer.password, // Include password for admin view
+        // SECURITY: Never expose password hashes, even to admins
         isActive: customer.isActive,
         createdAt: customer.createdAt,
         orders: customer.orders,
@@ -86,6 +91,10 @@ export async function GET(request: NextRequest) {
 }
 
 export async function PUT(request: NextRequest) {
+  // Require admin authentication
+  const authError = await requireAdminAuth(request)
+  if (authError) return authError
+  
   try {
     const body = await request.json()
     const { customerId, isActive } = body

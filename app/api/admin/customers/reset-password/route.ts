@@ -2,8 +2,14 @@ import { NextRequest, NextResponse } from 'next/server'
 export const dynamic = 'force-dynamic'
 import { prisma } from '@/lib/prisma'
 import bcrypt from 'bcryptjs'
+import { requireAdminAuth } from '@/lib/auth-middleware'
+import { sanitizeInput } from '@/lib/sanitize'
 
 export async function POST(request: NextRequest) {
+  // Require admin authentication
+  const authError = await requireAdminAuth(request)
+  if (authError) return authError
+  
   try {
     const body = await request.json()
     const { customerId } = body
@@ -15,6 +21,21 @@ export async function POST(request: NextRequest) {
       )
     }
 
+    // Sanitize and validate customer ID
+    const sanitizedCustomerId = sanitizeInput(customerId)
+    
+    // Verify customer exists
+    const customer = await prisma.customer.findUnique({
+      where: { id: sanitizedCustomerId },
+    })
+
+    if (!customer) {
+      return NextResponse.json(
+        { error: 'Customer not found' },
+        { status: 404 }
+      )
+    }
+
     // Generate a random temporary password (8 characters, alphanumeric)
     const tempPassword = Math.random().toString(36).slice(-8)
     
@@ -23,7 +44,7 @@ export async function POST(request: NextRequest) {
 
     // Update the customer's password in the database
     await prisma.customer.update({
-      where: { id: customerId },
+      where: { id: sanitizedCustomerId },
       data: { password: hashedPassword },
     })
 

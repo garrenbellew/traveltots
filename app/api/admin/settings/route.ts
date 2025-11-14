@@ -1,9 +1,13 @@
 import { NextRequest, NextResponse } from 'next/server'
 export const dynamic = 'force-dynamic'
 import { prisma } from '@/lib/prisma'
+import { requireAdminAuth } from '@/lib/auth-middleware'
 
 // Get admin settings
 export async function GET(request: NextRequest) {
+  // Require admin authentication
+  const authError = await requireAdminAuth(request)
+  if (authError) return authError
   try {
     // Get the first admin (you can modify this to get the logged-in admin)
     const admin = await prisma.admin.findFirst()
@@ -36,6 +40,10 @@ export async function GET(request: NextRequest) {
 
 // Update admin settings
 export async function PUT(request: NextRequest) {
+  // Require admin authentication
+  const authError = await requireAdminAuth(request)
+  if (authError) return authError
+  
   try {
     const body = await request.json()
     console.log('Received settings update:', { 
