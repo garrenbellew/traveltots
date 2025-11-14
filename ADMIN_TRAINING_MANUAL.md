@@ -1,4 +1,4 @@
-<!-- Last updated: 2025-11-11 -->
+<!-- Last updated: 2025-11-14 -->
 # Travel Tots Admin Training Manual
 
 **Welcome!** This guide will help you manage your Travel Tots website easily, even if you're not tech-savvy. Take your time and follow the steps carefully.

@@ -109,10 +109,7 @@ export default async function Home() {
     },
     priceRange: '€€',
     image: `${siteUrl}/logo.png`,
-    areaServed: {
-      '@type': 'City',
-      name: 'Los Alcázares',
-    },
+    areaServed: 'Los Alcázares, Murcia, Spain',
   })
 
   const serviceStructuredData = generateServiceStructuredData({
@@ -287,6 +284,7 @@ export default async function Home() {
         </div>
       </section>
     </div>
+    </>
   )
 }
 
