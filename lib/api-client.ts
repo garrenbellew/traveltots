@@ -26,22 +26,16 @@ export function getAdminSession(): { id?: string; username?: string; email?: str
 
 /**
  * Get CSRF token (fetches from server if not cached)
+ * 
+ * Note: Authentication is handled via JWT cookies, not Authorization header
  */
 export async function getCSRFToken(): Promise<string | null> {
   if (csrfToken) return csrfToken
 
   try {
-    const session = getAdminSession()
-    const headers: HeadersInit = {}
-    
-    // Add Authorization header if session exists (for backward compatibility)
-    if (session?.id) {
-      headers['Authorization'] = `Bearer ${session.id}`
-    }
-    
+    // JWT tokens are in HTTP-only cookies, so we just need to include credentials
     const response = await fetch('/api/admin/csrf-token', {
       credentials: 'include', // Include cookies for JWT tokens
-      headers,
     })
     
     if (response.ok) {
@@ -50,6 +44,10 @@ export async function getCSRFToken(): Promise<string | null> {
       return csrfToken
     } else {
       console.error('Failed to fetch CSRF token:', response.status, response.statusText)
+      // If unauthorized, the user might need to log in again
+      if (response.status === 401) {
+        console.warn('Not authenticated. User may need to log in again.')
+      }
     }
   } catch (error) {
     console.error('Error fetching CSRF token:', error)
@@ -74,19 +72,24 @@ export function clearCSRFToken() {
 
 /**
  * Make an authenticated API request
- * Automatically adds Authorization header and CSRF token
+ * Automatically adds CSRF token and includes cookies for JWT authentication
+ * 
+ * Note: JWT tokens are stored in HTTP-only cookies, so we don't need to
+ * manually add them to headers. The browser automatically includes cookies
+ * when credentials: 'include' is set.
  */
 export async function authenticatedFetch(
   url: string,
   options: RequestInit = {}
 ): Promise<Response> {
-  const session = getAdminSession()
   const headers = new Headers(options.headers)
   
-  // Add Authorization header if session exists (for backward compatibility)
-  // JWT tokens are now in HTTP-only cookies, but we keep this for compatibility
-  if (session?.id) {
-    headers.set('Authorization', `Bearer ${session.id}`)
+  // Check if user is authenticated (has session in localStorage)
+  // This is just for client-side checks - actual auth is via JWT cookies
+  const session = getAdminSession()
+  if (!session) {
+    // If no session, redirect to login (but let the server handle auth)
+    console.warn('No admin session found. Request may fail if not authenticated.')
   }
   
   // Add CSRF token for state-changing operations
@@ -95,6 +98,8 @@ export async function authenticatedFetch(
     const token = await getCSRFToken()
     if (token) {
       headers.set('X-CSRF-Token', token)
+    } else {
+      console.warn('CSRF token not available. Request may fail.')
     }
   }
   
@@ -107,7 +112,7 @@ export async function authenticatedFetch(
   return fetch(url, {
     ...options,
     headers,
-    credentials: 'include', // Include cookies for JWT tokens
+    credentials: 'include', // Include cookies for JWT tokens (this is the key!)
   })
 }
 
