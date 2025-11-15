@@ -31,14 +31,25 @@ export async function getCSRFToken(): Promise<string | null> {
   if (csrfToken) return csrfToken
 
   try {
+    const session = getAdminSession()
+    const headers: HeadersInit = {}
+    
+    // Add Authorization header if session exists (for backward compatibility)
+    if (session?.id) {
+      headers['Authorization'] = `Bearer ${session.id}`
+    }
+    
     const response = await fetch('/api/admin/csrf-token', {
-      credentials: 'include', // Include cookies
+      credentials: 'include', // Include cookies for JWT tokens
+      headers,
     })
     
     if (response.ok) {
       const data = await response.json()
       csrfToken = data.csrfToken
       return csrfToken
+    } else {
+      console.error('Failed to fetch CSRF token:', response.status, response.statusText)
     }
   } catch (error) {
     console.error('Error fetching CSRF token:', error)
@@ -88,7 +99,8 @@ export async function authenticatedFetch(
   }
   
   // Set Content-Type if not already set and body exists
-  if (options.body && !headers.has('Content-Type')) {
+  // Don't set Content-Type for FormData - browser will set it with boundary
+  if (options.body && !headers.has('Content-Type') && !(options.body instanceof FormData)) {
     headers.set('Content-Type', 'application/json')
   }
   

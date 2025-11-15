@@ -2,6 +2,7 @@
 
 import { useState, useEffect } from 'react'
 import { X } from 'lucide-react'
+import { authenticatedFetch } from '@/lib/api-client'
 
 interface Category {
   id?: string
@@ -65,9 +66,8 @@ export default function CategoryForm({ isOpen, onClose, category, onSuccess }: C
       
       const method = category?.id ? 'PUT' : 'POST'
 
-      const response = await fetch(url, {
+      const response = await authenticatedFetch(url, {
         method,
-        headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify(formData),
       })
 

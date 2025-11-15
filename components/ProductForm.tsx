@@ -3,6 +3,7 @@
 import { useState, useEffect } from 'react'
 import { X, Upload } from 'lucide-react'
 import BundleSelector from './BundleSelector'
+import { authenticatedFetch } from '@/lib/api-client'
 
 interface Category {
   id: string
@@ -86,7 +87,7 @@ export default function ProductForm({ isOpen, onClose, product, onSuccess, categ
       const uploadData = new FormData()
       uploadData.append('file', file)
 
-      const response = await fetch('/api/upload', {
+      const response = await authenticatedFetch('/api/upload', {
         method: 'POST',
         body: uploadData,
       })
@@ -125,9 +126,8 @@ export default function ProductForm({ isOpen, onClose, product, onSuccess, categ
       
       const method = product?.id ? 'PUT' : 'POST'
 
-      const response = await fetch(url, {
+      const response = await authenticatedFetch(url, {
         method,
-        headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify(formData),
       })
 

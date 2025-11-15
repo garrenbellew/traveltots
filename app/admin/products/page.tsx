@@ -7,6 +7,7 @@ import { Plus, Edit, Trash2, Package, Tag, ArrowUp, ArrowDown } from 'lucide-rea
 import ProductForm from '@/components/ProductForm'
 import CategoryForm from '@/components/CategoryForm'
 import AdminNav from '@/components/AdminNav'
+import { authenticatedFetch } from '@/lib/api-client'
 
 interface Product {
   id: string
@@ -55,8 +56,8 @@ export default function AdminProductsPage() {
   async function fetchData() {
     try {
       const [productsRes, categoriesRes] = await Promise.all([
-        fetch('/api/products?all=true'),
-        fetch('/api/categories')
+        authenticatedFetch('/api/products?all=true'),
+        fetch('/api/categories') // Public endpoint, no auth needed
       ])
       const productsData = await productsRes.json()
       const categoriesData = await categoriesRes.json()
@@ -105,7 +106,7 @@ export default function AdminProductsPage() {
     }
 
     try {
-      const response = await fetch(`/api/products/${productId}`, {
+      const response = await authenticatedFetch(`/api/products/${productId}`, {
         method: 'DELETE',
       })
 
@@ -145,11 +146,8 @@ export default function AdminProductsPage() {
 
       const categoryId = filterCategoryId !== 'all' ? filterCategoryId : undefined
 
-      const response = await fetch('/api/products/sort', {
+      const response = await authenticatedFetch('/api/products/sort', {
         method: 'PUT',
-        headers: {
-          'Content-Type': 'application/json',
-        },
         body: JSON.stringify({
           productId,
           direction,
@@ -179,7 +177,7 @@ export default function AdminProductsPage() {
     }
 
     try {
-      const response = await fetch(`/api/categories/${categoryId}`, {
+      const response = await authenticatedFetch(`/api/categories/${categoryId}`, {
         method: 'DELETE',
       })
 
